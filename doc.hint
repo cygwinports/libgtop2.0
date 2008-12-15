@@ -1,0 +1,10 @@
+category: Gnome Doc
+requires: cygwin glib2-doc
+external-source: libgtop2
+sdesc: "GNOME system monitoring library (documentation)"
+ldesc: "GNOME cross-platform system monitoring library
+
+PLEASE NOTE:
+Being a very OS-sensitive package, it's very likely that
+there are bugs in the sysdeps backend, in addition to a
+number of features which are not available on all platforms."

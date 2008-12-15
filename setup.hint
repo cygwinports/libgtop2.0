@@ -1,0 +1,9 @@
+category: Gnome
+requires: cygwin glib2 libXau6 libintl8
+sdesc: "GNOME system monitoring library (runtime)"
+ldesc: "GNOME cross-platform system monitoring library
+
+PLEASE NOTE:
+Being a very OS-sensitive package, it's very likely that
+there are bugs in the sysdeps backend, in addition to a
+number of features which are not available on all platforms."

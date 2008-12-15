@@ -1,0 +1,3150 @@
+--- origsrc/libgtop-2.14.7/configure.in	2007-02-10 09:39:32.000000000 -0600
++++ src/libgtop-2.14.7/configure.in	2007-02-17 22:33:41.765625000 -0600
+@@ -383,7 +383,7 @@
+ 
+ if test x$libgtop_need_server = xyes ; then
+    sysdeps_suid_lib="\$(top_builddir)/sysdeps/\$(sysdeps_dir)/libgtop_sysdeps_suid-2.0.la"
+-   server_programs='libgtop_server2'
++   server_programs='libgtop_server2$(EXEEXT)'
+ else
+    sysdeps_suid_lib=
+    server_programs=
+@@ -410,6 +410,7 @@
+ sysdeps/freebsd/Makefile
+ sysdeps/solaris/Makefile
+ sysdeps/aix/Makefile
++sysdeps/cygwin/Makefile
+ src/Makefile
+ src/daemon/Makefile
+ src/inodedb/Makefile
+--- origsrc/libgtop-2.14.7/doc/reference/Makefile.am	2007-01-02 16:50:28.000000000 -0600
++++ src/libgtop-2.14.7/doc/reference/Makefile.am	2007-02-17 22:33:41.781250000 -0600
+@@ -26,8 +26,8 @@
+ # Used for dependencies. The docs will be rebuilt if any of these change.
+ # e.g. HFILE_GLOB=$(top_srcdir)/gtk/*.h
+ # e.g. CFILE_GLOB=$(top_srcdir)/gtk/*.c
+-HFILE_GLOB=../../include/glibtop/*.h
+-CFILE_GLOB=../../sysdeps/common/*.c
++HFILE_GLOB=$(top_srcdir)/include/glibtop/*.h
++CFILE_GLOB=$(top_srcdir)/sysdeps/common/*.c
+ 
+ # Header files to ignore when scanning.
+ # e.g. IGNORE_HFILES=gtkdebug.h gtkintl.h
+--- origsrc/libgtop-2.14.7/examples/netload.c	2007-01-02 16:50:29.000000000 -0600
++++ src/libgtop-2.14.7/examples/netload.c	2007-02-17 22:33:41.781250000 -0600
+@@ -44,6 +44,9 @@
+ #define PROFILE_COUNT	1
+ #endif
+ 
++#ifndef INET6_ADDRSTRLEN
++#define INET6_ADDRSTRLEN	46
++#endif
+ 
+ static char* hwaddress_format_for_display(glibtop_netload *buf)
+ {
+--- origsrc/libgtop-2.14.7/lib/Makefile.am	2007-01-02 16:50:29.000000000 -0600
++++ src/libgtop-2.14.7/lib/Makefile.am	2007-02-17 22:33:41.781250000 -0600
+@@ -7,8 +7,8 @@
+ 				  read_data.c write.c lib.c parameter.c \
+ 				  sysdeps.c
+ 
+-libgtop_2_0_la_LDFLAGS		= $(LT_VERSION_INFO) -export-symbols-regex "^[^_].*"
+-libgtop_2_0_la_LIBADD		= $(GLIB_LIBS) $(top_builddir)/sysdeps/common/libgtop_common-2.0.la $(top_builddir)/sysdeps/@sysdeps_dir@/libgtop_sysdeps-2.0.la $(sysdeps_suid_lib)
++libgtop_2_0_la_LDFLAGS		= $(LT_VERSION_INFO) -export-symbols-regex "^[^_].*" -no-undefined
++libgtop_2_0_la_LIBADD		= $(top_builddir)/sysdeps/common/libgtop_common-2.0.la $(top_builddir)/sysdeps/@sysdeps_dir@/libgtop_sysdeps-2.0.la $(sysdeps_suid_lib) $(GLIB_LIBS)
+ 
+ BUILT_SOURCES			= lib.c
+ 
+--- origsrc/libgtop-2.14.7/libgtop-sysdeps.m4	2007-01-31 15:15:48.000000000 -0600
++++ src/libgtop-2.14.7/libgtop-sysdeps.m4	2007-02-17 22:33:41.796875000 -0600
+@@ -86,6 +86,12 @@
+ 	  libgtop_have_sysinfo=yes
+ 	  libgtop_postinstall='chgrp system $(bindir)/libgtop_server && chmod g+s $(bindir)/libgtop_server2'
+ 	  ;;
++	cygwin*)
++	  libgtop_sysdeps_dir=cygwin
++	  libgtop_use_machine_h=no
++	  libgtop_need_server=no
++	  libgtop_have_sysinfo=yes
++	  ;;
+ 	*)
+ 	  if test x$hacker_mode = xyes ; then
+ 	    case "$host_os" in
+--- origsrc/libgtop-2.14.7/src/daemon/gnuserv.c	2007-01-02 16:50:27.000000000 -0600
++++ src/libgtop-2.14.7/src/daemon/gnuserv.c	2007-02-17 22:33:41.796875000 -0600
+@@ -541,6 +541,7 @@
+ 	syslog_message (LOG_DEBUG, "Parent ID: (%d, %d) - (%d, %d)",
+ 			getuid (), geteuid (), getgid (), getegid ());
+ 
++#ifndef __CYGWIN__
+     if (geteuid () == 0) {
+ 	changed_uid = 1;
+ 	if (setregid (SERVER_GID, SERVER_GID)) {
+@@ -557,6 +558,24 @@
+ 	    exit (1);
+ 	}
+     }
++#else
++    if (geteuid () == 0) {
++	changed_uid = 1;
++	if (setgid (SERVER_GID)) {
++	    syslog_io_message (LOG_ERR, "setgid (SERVER_GID)");
++	    exit (1);
++	}
++	if (setuid (SERVER_UID)) {
++	    syslog_io_message (LOG_ERR, "setuid (SERVER_UID)");
++	    exit (1);
++	}
++    } else {
++	if (setuid (geteuid ())) {
++	    syslog_io_message (LOG_ERR, "setuid (euid)");
++	    exit (1);
++	}
++    }
++#endif
+ 
+     if (enable_debug)
+ 	syslog_message (LOG_DEBUG, "Parent ID: (%d, %d) - (%d, %d)",
+--- origsrc/libgtop-2.14.7/sysdeps/Makefile.am	2007-01-02 16:50:28.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/Makefile.am	2007-02-17 22:33:41.796875000 -0600
+@@ -2,4 +2,4 @@
+ SUBDIRS			= common @sysdeps_dir@
+ 
+ DIST_SUBDIRS		= common linux osf1 \
+-			  stub stub_suid sun4 freebsd solaris aix
++			  stub stub_suid sun4 freebsd solaris aix cygwin
+--- origsrc/libgtop-2.14.7/sysdeps/common/Makefile.am	2007-01-02 16:50:27.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/common/Makefile.am	2007-02-17 22:33:41.812500000 -0600
+@@ -20,11 +20,11 @@
+ 				  default.c \
+ 				  $(inodedb_SRCLIST)
+ 
+-# libgtop_common_2_0_la_LDFLAGS	= $(LT_VERSION_INFO)
++#libgtop_common_2_0_la_LDFLAGS	= $(LT_VERSION_INFO) -no-undefined
+ libgtop_common_2_0_la_LIBADD	= $(LIBGTOP_EXTRA_LIBS)
+ 
+ libgtop_suid_common_2_0_la_SOURCES	= error.c sysdeps_suid.c
+ 
+-# libgtop_suid_common_2_0_la_LDFLAGS	= $(LT_VERSION_INFO)
++#libgtop_suid_common_2_0_la_LDFLAGS	= $(LT_VERSION_INFO) -no-undefined
+ 
+ EXTRA_DIST			= inodedb.c
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/Makefile.am	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/Makefile.am	2007-02-17 22:33:42.328125000 -0600
+@@ -0,0 +1,20 @@
++INCLUDES			= @INCLUDES@
++
++noinst_LTLIBRARIES		= libgtop_sysdeps-2.0.la
++
++libgtop_sysdeps_2_0_la_SOURCES	= open.c close.c cpu.c mem.c swap.c \
++				  uptime.c loadavg.c shm_limits.c msg_limits.c \
++				  sem_limits.c proclist.c procstate.c procuid.c \
++				  proctime.c procmem.c procsignal.c prockernel.c \
++				  procsegment.c procargs.c procmap.c siglist.c \
++				  sysinfo.c netload.c ppp.c glibtop_private.c \
++				  netlist.c procopenfiles.c
++
++libgtop_sysdeps_2_0_la_LIBADD	=  @GLIB_LIBS@
++
++#libgtop_sysdeps_2_0_la_LDFLAGS	= $(LT_VERSION_INFO) -no-undefined
++
++libgtopinclude_HEADERS		= glibtop_server.h glibtop_machine.h
++libgtopincludedir		= $(includedir)/libgtop-2.0
++
++noinst_HEADERS			= glibtop_private.h
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/close.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/close.c	2007-02-17 22:33:42.359375000 -0600
+@@ -0,0 +1,31 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop/close.h>
++
++/* Closes pipe to gtop server. */
++
++void
++glibtop_close_s (glibtop *server)
++{ }
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/cpu.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/cpu.c	2007-02-17 22:33:42.359375000 -0600
+@@ -0,0 +1,109 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop/error.h>
++#include <glibtop/cpu.h>
++
++#include "glibtop_private.h"
++
++static const unsigned long _glibtop_sysdeps_cpu =
++(1L << GLIBTOP_CPU_TOTAL) + (1L << GLIBTOP_CPU_USER) +
++(1L << GLIBTOP_CPU_NICE) + (1L << GLIBTOP_CPU_SYS) +
++(1L << GLIBTOP_CPU_IDLE) + (1L << GLIBTOP_CPU_FREQUENCY);
++
++static const unsigned long _glibtop_sysdeps_cpu_smp =
++(1L << GLIBTOP_XCPU_TOTAL) + (1L << GLIBTOP_XCPU_USER) +
++(1L << GLIBTOP_XCPU_NICE) + (1L << GLIBTOP_XCPU_SYS) +
++(1L << GLIBTOP_XCPU_IDLE);
++
++/* Init function. */
++
++void
++glibtop_init_cpu_s (glibtop *server)
++{
++	server->sysdeps.cpu = _glibtop_sysdeps_cpu;
++
++	if (server->ncpu)
++		server->sysdeps.cpu |= _glibtop_sysdeps_cpu_smp;
++}
++
++/* Provides information about cpu usage. */
++
++#define FILENAME	"/proc/stat"
++
++void
++glibtop_get_cpu_s (glibtop *server, glibtop_cpu *buf)
++{
++	char buffer [BUFSIZ], *p;
++	int i;
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_CPU, 0);
++
++	memset (buf, 0, sizeof (glibtop_cpu));
++
++	file_to_buffer(server, buffer, FILENAME);
++
++	/*
++	 * GLOBAL
++	 */
++
++	p = skip_token (buffer);	/* "cpu" */
++
++	buf->user = strtoull (p, &p, 0);
++	buf->nice = strtoull (p, &p, 0);
++	buf->sys  = strtoull (p, &p, 0);
++	buf->idle = strtoull (p, &p, 0);
++	buf->total = buf->user + buf->nice + buf->sys + buf->idle;
++
++	buf->frequency = 100;
++	buf->flags = _glibtop_sysdeps_cpu;
++
++	/*
++	 * PER CPU
++	 */
++
++	for (i = 0; i <= server->ncpu; i++) {
++
++		p = skip_line(p); /* move to ^ */
++
++		if (!check_cpu_line_warn(server, p, i))
++			break;
++
++		p = skip_token(p); /* "cpuN" */
++
++		buf->xcpu_user [i] = strtoull (p, &p, 0);
++		buf->xcpu_nice [i] = strtoull (p, &p, 0);
++		buf->xcpu_sys  [i] = strtoull (p, &p, 0);
++		buf->xcpu_idle [i] = strtoull (p, &p, 0);
++		buf->xcpu_total[i] = buf->xcpu_user [i] \
++			+ buf->xcpu_nice [i] \
++			+ buf->xcpu_sys  [i] \
++			+ buf->xcpu_idle [i];
++
++	}
++
++	if(server->ncpu) /* ok, that's a real SMP */
++		buf->flags |= _glibtop_sysdeps_cpu_smp;
++
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/fsusage.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/fsusage.c	2007-02-17 22:33:42.375000000 -0600
+@@ -0,0 +1,54 @@
++#include <config.h>
++#include <glibtop.h>
++#include <glibtop/error.h>
++#include <glibtop/fsusage.h>
++
++#include <glibtop_suid.h>
++
++#include <glib.h>
++
++#include <unistd.h>
++#include <sys/param.h>
++#if defined (HAVE_SYS_STATVFS_H)
++#include <sys/statvfs.h>
++#else
++#include <sys/mount.h>
++#endif
++
++#include <stdio.h>
++#include <string.h>
++#include <stdlib.h>
++
++void
++G_GNUC_INTERNAL
++_glibtop_freebsd_get_fsusage_read_write(glibtop *server,
++				      glibtop_fsusage *buf,
++				      const char *path);
++
++void G_GNUC_INTERNAL
++_glibtop_freebsd_get_fsusage_read_write(glibtop *server,
++				      glibtop_fsusage *buf,
++				      const char *path)
++{
++	int result;
++#if defined (STAT_STATVFS)
++	struct statvfs sfs;
++#else
++	struct statfs sfs;
++#endif
++
++#if defined (STAT_STATVFS)
++	result = statvfs (path, &sfs);
++#else
++	result = statfs (path, &sfs);
++#endif
++
++	if (result == -1) {
++		return;
++	}
++
++	buf->read = sfs.f_syncreads + sfs.f_asyncreads;
++	buf->write = sfs.f_syncwrites + sfs.f_asyncwrites;
++
++	buf->flags |= (1 << GLIBTOP_FSUSAGE_READ) | (1 << GLIBTOP_FSUSAGE_WRITE);
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/glibtop_machine.h	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/glibtop_machine.h	2007-02-17 22:33:42.375000000 -0600
+@@ -0,0 +1,46 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#ifndef __GLIBTOP_MACHINE_H__
++#define __GLIBTOP_MACHINE_H__
++
++#include <unistd.h>
++#include <fcntl.h>
++#include <ctype.h>
++
++G_BEGIN_DECLS
++
++typedef struct _glibtop_machine		glibtop_machine;
++
++struct _glibtop_machine
++{
++	pid_t	last_pid;
++	int	no_update;
++	int	fd_stat, fd_meminfo, fd_loadavg;
++	char	proc_stat [BUFSIZ], proc_statm [BUFSIZ];
++	char	proc_status [BUFSIZ];
++};
++
++G_END_DECLS
++
++#endif
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/glibtop_private.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/glibtop_private.c	2007-02-17 22:33:42.390625000 -0600
+@@ -0,0 +1,165 @@
++#include <config.h>
++#include <glibtop.h>
++#include <glibtop/error.h>
++
++#include "glibtop_private.h"
++
++#include <glib.h>
++
++#include <string.h>
++#include <stdlib.h>
++#include <stdarg.h>
++
++#include <fcntl.h>
++#include <unistd.h>
++
++
++unsigned long long
++get_scaled(const char *buffer, const char *key)
++{
++	const char    *ptr;
++	char	      *next;
++	unsigned long long value = 0;
++
++	if (G_LIKELY((ptr = strstr(buffer, key))))
++	{
++		ptr += strlen(key);
++		value = strtoull(ptr, &next, 0);
++		if (strchr(next, 'k'))
++			value *= 1024;
++		else if (strchr(next, 'M'))
++			value *= 1024 * 1024;
++	} else
++		g_warning("Could not read key '%s' in buffer '%s'",
++			  key, buffer);
++
++	return value;
++}
++
++
++char *
++skip_token (const char *p)
++{
++	p = next_token(p);
++	while (*p && !isspace(*p)) p++;
++	p = next_token(p);
++	return (char *)p;
++}
++
++
++/*
++ * Read functions
++ */
++enum TRY_FILE_TO_BUFFER
++{
++	TRY_FILE_TO_BUFFER_OK = 0,
++	TRY_FILE_TO_BUFFER_OPEN = -1,
++	TRY_FILE_TO_BUFFER_READ = -2
++};
++
++int try_file_to_buffer(char *buffer, const char *format, ...)
++{
++	char path[4096];
++	int fd;
++	ssize_t len;
++	va_list pa;
++
++	va_start(pa, format);
++
++	/* C99 also provides vsnprintf */
++	g_vsnprintf(path, sizeof path, format, pa);
++
++	va_end(pa);
++
++	buffer [0] = '\0';
++
++	if((fd = open (path, O_RDONLY)) < 0)
++		return TRY_FILE_TO_BUFFER_OPEN;
++
++	len = read (fd, buffer, BUFSIZ-1);
++	close (fd);
++
++	if (len < 0)
++		return TRY_FILE_TO_BUFFER_READ;
++
++	buffer [len] = '\0';
++
++	return TRY_FILE_TO_BUFFER_OK;
++}
++
++
++void
++file_to_buffer(glibtop *server, char *buffer, const char *filename)
++{
++	switch(try_file_to_buffer(buffer, filename))
++	{
++	case TRY_FILE_TO_BUFFER_OPEN:
++		glibtop_error_io_r (server, "open (%s)", filename);
++	case TRY_FILE_TO_BUFFER_READ:
++		glibtop_error_io_r (server, "read (%s)", filename);
++	}
++}
++
++
++
++
++static unsigned long
++read_boot_time(glibtop *server)
++{
++	char buffer[BUFSIZ];
++	char *btime;
++
++	file_to_buffer(server, buffer, "/proc/stat");
++
++	btime = strstr(buffer, "btime");
++
++	if (!btime) {
++		glibtop_warn_io_r(server, "cannot find btime in /proc/stat");
++		return 0UL;
++	}
++
++	btime = skip_token(btime);
++	return strtoul(btime, NULL, 10);
++}
++
++
++
++unsigned long
++get_boot_time(glibtop *server)
++{
++	static unsigned long boot_time = 0UL;
++
++	if(G_UNLIKELY(!boot_time))
++	{
++		boot_time = read_boot_time(server);
++	}
++
++	return boot_time;
++}
++
++
++size_t
++get_page_size(void)
++{
++	static size_t pagesize = 0;
++
++	if(G_UNLIKELY(!pagesize))
++	{
++		pagesize = getpagesize();
++	}
++
++	return pagesize;
++}
++
++
++
++gboolean
++check_cpu_line(glibtop *server, const char *line, unsigned i)
++{
++	char start[10];
++
++	g_snprintf(start, sizeof start, "cpu%u", i);
++
++	return g_str_has_prefix(line, start);
++}
++
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/glibtop_private.h	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/glibtop_private.h	2007-02-17 22:33:42.406250000 -0600
+@@ -0,0 +1,144 @@
++/* Copyright (C) 2004 BenoÃ®t Dejean
++   This file is part of LibGTop 2.0.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#ifndef __CYGWIN__GLIBTOP_PRIVATE_H__
++#define __CYGWIN__GLIBTOP_PRIVATE_H__
++
++#include <glibtop.h>
++#include <glibtop/error.h>
++
++#include <glib.h>
++
++#include <fcntl.h>
++#include <ctype.h>
++#include <string.h>
++
++G_BEGIN_DECLS
++
++static inline char*
++next_token(const char *p)
++{
++	while (isspace(*p)) p++;
++	return (char*) p;
++}
++
++char *
++skip_token (const char *p) G_GNUC_INTERNAL;
++
++static inline char *
++skip_multiple_token (const char *p, size_t count)
++{
++	while(count--)
++		p = skip_token (p);
++
++	return (char *)p;
++}
++
++
++static inline char *
++skip_line (const char *p)
++{
++	while (*p && *p != '\n') p++;
++	return (char *) (*p ? p+1 : p);
++}
++
++
++unsigned long long
++get_scaled(const char *buffer, const char *key) G_GNUC_INTERNAL;
++
++
++/* aborts on error */
++void G_GNUC_INTERNAL
++file_to_buffer(glibtop *server, char *buffer, const char *filename);
++
++/* return < 0 on error, otherwise 0 on success */
++int G_GNUC_INTERNAL
++try_file_to_buffer(char *buffer, const char *format, ...) G_GNUC_PRINTF(2, 3);
++
++
++/* some inline functions that wrap proc path
++ * as fast as macros :)
++ */
++
++static inline int
++proc_file_to_buffer (char *buffer, const char *fmt, pid_t pid)
++{
++	return try_file_to_buffer(buffer, fmt, pid);
++}
++
++static inline int
++proc_stat_to_buffer (char *buffer, pid_t pid)
++{
++	return proc_file_to_buffer (buffer, "/proc/%d/stat", pid);
++}
++
++static inline int
++proc_status_to_buffer (char *buffer, pid_t pid)
++{
++	return proc_file_to_buffer (buffer, "/proc/%d/status", pid);
++}
++
++static inline int
++proc_statm_to_buffer (char *buffer, pid_t pid)
++{
++	return proc_file_to_buffer (buffer, "/proc/%d/statm", pid);
++}
++
++
++static inline char *
++proc_stat_after_cmd (char *p)
++{
++	p = strrchr (p, ')');
++	if (G_LIKELY(p))
++		*p++ = '\0';
++	return p;
++}
++
++
++unsigned long
++get_boot_time(glibtop *server) G_GNUC_INTERNAL;
++
++
++size_t
++get_page_size(void) G_GNUC_INTERNAL;
++
++
++gboolean
++check_cpu_line(glibtop *server, const char *line, unsigned n) G_GNUC_INTERNAL;
++
++
++static inline gboolean
++check_cpu_line_warn(glibtop *server, const char *line, unsigned i)
++{
++	gboolean ret;
++
++	ret = check_cpu_line(server, line, i);
++
++	if (G_UNLIKELY(!ret))
++		glibtop_warn_io_r(server,
++				  "'%s' does not start with 'cpu%u'",
++				  line, i);
++
++	return ret;
++}
++
++
++G_END_DECLS
++
++#endif /* __CYGWIN__GLIBTOP_PRIVATE_H__ */
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/glibtop_server.h	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/glibtop_server.h	2007-02-17 22:33:42.406250000 -0600
+@@ -0,0 +1,50 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#ifndef __LINUX__GLIBTOP_SERVER_H__
++#define __LINUX__GLIBTOP_SERVER_H__
++
++#define GLIBTOP_SUID_CPU		0
++#define GLIBTOP_SUID_MEM		0
++#define GLIBTOP_SUID_SWAP		0
++#define GLIBTOP_SUID_UPTIME		0
++#define GLIBTOP_SUID_LOADAVG		0
++#define GLIBTOP_SUID_SHM_LIMITS		0
++#define GLIBTOP_SUID_MSG_LIMITS		0
++#define GLIBTOP_SUID_SEM_LIMITS		0
++#define GLIBTOP_SUID_PROCLIST		0
++#define GLIBTOP_SUID_PROC_STATE		0
++#define GLIBTOP_SUID_PROC_UID		0
++#define GLIBTOP_SUID_PROC_MEM		0
++#define GLIBTOP_SUID_PROC_TIME		0
++#define GLIBTOP_SUID_PROC_SIGNAL	0
++#define GLIBTOP_SUID_PROC_KERNEL	0
++#define GLIBTOP_SUID_PROC_SEGMENT	0
++#define GLIBTOP_SUID_PROC_ARGS		0
++#define GLIBTOP_SUID_PROC_MAP		0
++#define GLIBTOP_SUID_NETLOAD		0
++#define GLIBTOP_SUID_NETLIST		0
++#define GLIBTOP_SUID_PPP		0
++#define GLIBTOP_SUID_PROC_FILE		0
++
++#endif /* __LINUX__GLIBTOP_SERVER_H__ */
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/loadavg.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/loadavg.c	2007-02-17 22:33:42.421875000 -0600
+@@ -0,0 +1,85 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop/error.h>
++#include <glibtop/loadavg.h>
++
++#include "glibtop_private.h"
++
++static const unsigned long _glibtop_sysdeps_loadavg =
++(1L << GLIBTOP_LOADAVG_LOADAVG);
++
++static const unsigned long _glibtop_sysdeps_loadavg_tasks =
++(1L << GLIBTOP_LOADAVG_NR_RUNNING) +
++(1L << GLIBTOP_LOADAVG_NR_TASKS) +
++(1L << GLIBTOP_LOADAVG_LAST_PID);
++
++/* Init function. */
++
++void
++glibtop_init_loadavg_s (glibtop *server)
++{
++	server->sysdeps.loadavg = _glibtop_sysdeps_loadavg;
++}
++
++/* Provides load load average. */
++
++#define FILENAME	"/proc/loadavg"
++
++void
++glibtop_get_loadavg_s (glibtop *server, glibtop_loadavg *buf)
++{
++	char buffer [BUFSIZ], *p, *old;
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_LOADAVG, 0);
++
++	memset (buf, 0, sizeof (glibtop_loadavg));
++
++	file_to_buffer(server, buffer, FILENAME);
++
++	buf->loadavg [0] = g_ascii_strtod (buffer, &p);
++	buf->loadavg [1] = g_ascii_strtod (p, &p);
++	buf->loadavg [2] = g_ascii_strtod (p, &p);
++
++	buf->flags = _glibtop_sysdeps_loadavg;
++
++	p = next_token(p);
++
++	/* Older Linux versions don't have the nr_running/nr_tasks fields. */
++
++	old = p;
++	while (*p) {
++		if (*p == '/')
++			break;
++		if (!isdigit (*p))
++			return;
++		p++;
++	}
++
++	buf->nr_running  = strtoull (old, &p, 0); p++;
++	buf->nr_tasks    = strtoull (p, &p, 0);
++	buf->last_pid    = strtoull (p, &p, 0);
++
++	buf->flags |= _glibtop_sysdeps_loadavg_tasks;
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/mem.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/mem.c	2007-02-17 22:33:42.421875000 -0600
+@@ -0,0 +1,68 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop/error.h>
++#include <glibtop/mem.h>
++
++#include "glibtop_private.h"
++
++static const unsigned long _glibtop_sysdeps_mem =
++(1L << GLIBTOP_MEM_TOTAL) + (1L << GLIBTOP_MEM_USED) +
++(1L << GLIBTOP_MEM_FREE) + (1L << GLIBTOP_MEM_SHARED) +
++(1L << GLIBTOP_MEM_BUFFER) + (1L << GLIBTOP_MEM_CACHED) +
++(1L << GLIBTOP_MEM_USER);
++
++/* Init function. */
++
++void
++glibtop_init_mem_s (glibtop *server)
++{
++	server->sysdeps.mem = _glibtop_sysdeps_mem;
++}
++
++/* Provides information about memory usage. */
++
++#define FILENAME	"/proc/meminfo"
++
++void
++glibtop_get_mem_s (glibtop *server, glibtop_mem *buf)
++{
++	char buffer [BUFSIZ];
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_MEM, 0);
++
++	memset(buf, 0, sizeof *buf);
++
++	file_to_buffer(server, buffer, FILENAME);
++
++	buf->total  = get_scaled(buffer, "MemTotal:");
++	buf->free   = get_scaled(buffer, "MemFree:");
++	buf->used   = buf->total - buf->free;
++	buf->shared = 0;
++	buf->buffer = get_scaled(buffer, "Buffers:");
++	buf->cached = get_scaled(buffer, "Cached:");
++
++	buf->user = buf->total - buf->free - buf->cached - buf->buffer;
++	buf->flags = _glibtop_sysdeps_mem;
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/msg_limits.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/msg_limits.c	2007-02-17 22:33:42.437500000 -0600
+@@ -0,0 +1,63 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop/msg_limits.h>
++
++#define _KERNEL
++#include <sys/ipc.h>
++#include <sys/msg.h>
++
++static const unsigned long _glibtop_sysdeps_msg_limits =
++(1L << GLIBTOP_IPC_MSGMAX) + (1L << GLIBTOP_IPC_MSGMNB) +
++(1L << GLIBTOP_IPC_MSGMNI) + (1L << GLIBTOP_IPC_MSGSSZ) +
++(1L << GLIBTOP_IPC_MSGTQL);
++
++/* Init function. */
++
++void
++glibtop_init_msg_limits_s (glibtop *server)
++{
++	server->sysdeps.msg_limits = _glibtop_sysdeps_msg_limits;
++}
++
++/* Provides information about sysv ipc limits. */
++
++void
++glibtop_get_msg_limits_s (glibtop *server, glibtop_msg_limits *buf)
++{
++	struct msginfo msginfo;
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_MSG_LIMITS, 0);
++
++	memset (buf, 0, sizeof (glibtop_msg_limits));
++
++	msgctl (0, IPC_INFO, (void*) &msginfo);
++
++	buf->msgmax = msginfo.msgmax;
++	buf->msgmnb = msginfo.msgmnb;
++	buf->msgmni = msginfo.msgmni;
++	buf->msgssz = msginfo.msgssz;
++	buf->msgtql = msginfo.msgtql;
++	buf->flags = _glibtop_sysdeps_msg_limits;
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/netlist.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/netlist.c	2007-02-17 22:33:42.437500000 -0600
+@@ -0,0 +1,41 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* This file is part of LibGTop 2.0.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop.h>
++#include <glibtop/netlist.h>
++
++static const unsigned long _glibtop_sysdeps_netlist = 0;
++
++/* Init function. */
++
++void
++glibtop_init_netlist_s (glibtop *server)
++{
++	server->sysdeps.netlist = _glibtop_sysdeps_netlist;
++}
++
++char**
++glibtop_get_netlist_s (glibtop *server, glibtop_netlist *buf)
++{
++	memset (buf, 0, sizeof (glibtop_netlist));
++
++	return NULL;
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/netload.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/netload.c	2007-02-17 22:33:42.453125000 -0600
+@@ -0,0 +1,127 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, October 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++
++#include <glibtop.h>
++#include <glibtop/error.h>
++#include <glibtop/netload.h>
++
++#include "glibtop_private.h"
++
++#include <errno.h>
++#include <string.h>
++
++#include <sys/types.h>
++#include <sys/socket.h>
++#include <sys/ioctl.h>
++
++#include <cygwin/if.h>
++#include <cygwin/in.h>
++#include <cygwin/icmp.h>
++#include <net/if.h>
++#include <netinet/ip_icmp.h>
++#include <netinet/in.h>
++#include <netinet/ip.h>
++#include <netinet/tcp.h>
++#include <netinet/udp.h>
++#include <net/if.h>
++
++
++#ifdef HAVE_IFADDRS_H
++/* needed for IPV6 support */
++
++#include <ifaddrs.h>
++
++#ifndef IN6_IS_ADDR_GLOBAL
++#define IN6_IS_ADDR_GLOBAL(a) \
++   (((((__const uint8_t *) (a))[0] & 0xff) == 0x3f   \
++     || (((__const uint8_t *) (a))[0] & 0xff) == 0x20))
++#endif
++#endif /* HAVE_IFADDRS_H */
++
++
++#define _GLIBTOP_IP_FW_ACCTIN	0x1000	/* Account incoming packets only. */
++#define _GLIBTOP_IP_FW_ACCTOUT	0x2000	/* Account outgoing packets only. */
++
++static const unsigned long _glibtop_sysdeps_netload =
++(1L << GLIBTOP_NETLOAD_ERRORS_IN) +
++(1L << GLIBTOP_NETLOAD_ERRORS_OUT) +
++(1L << GLIBTOP_NETLOAD_COLLISIONS);
++
++static const unsigned long _glibtop_sysdeps_netload_data =
++(1L << GLIBTOP_NETLOAD_ADDRESS) +
++(1L << GLIBTOP_NETLOAD_SUBNET) +
++(1L << GLIBTOP_NETLOAD_MTU);
++
++static const unsigned long _glibtop_sysdeps_netload_bytes =
++(1L << GLIBTOP_NETLOAD_BYTES_IN) +
++(1L << GLIBTOP_NETLOAD_BYTES_OUT) +
++(1L << GLIBTOP_NETLOAD_BYTES_TOTAL);
++
++static const unsigned long _glibtop_sysdeps_netload_packets =
++(1L << GLIBTOP_NETLOAD_PACKETS_IN) +
++(1L << GLIBTOP_NETLOAD_PACKETS_OUT) +
++(1L << GLIBTOP_NETLOAD_PACKETS_TOTAL);
++
++static const unsigned long _glibtop_sysdeps_netload_total =
++(1L << GLIBTOP_NETLOAD_PACKETS_TOTAL) +
++(1L << GLIBTOP_NETLOAD_BYTES_TOTAL);
++
++static const unsigned long _glibtop_sysdeps_netload_in =
++(1L << GLIBTOP_NETLOAD_PACKETS_TOTAL) +
++(1L << GLIBTOP_NETLOAD_BYTES_TOTAL) +
++(1L << GLIBTOP_NETLOAD_PACKETS_IN) +
++(1L << GLIBTOP_NETLOAD_BYTES_IN);
++
++static const unsigned long _glibtop_sysdeps_netload_out =
++(1L << GLIBTOP_NETLOAD_PACKETS_TOTAL) +
++(1L << GLIBTOP_NETLOAD_BYTES_TOTAL) +
++(1L << GLIBTOP_NETLOAD_PACKETS_OUT) +
++(1L << GLIBTOP_NETLOAD_BYTES_OUT);
++
++static const unsigned long _glibtop_sysdeps_netload_6 =
++(1L << GLIBTOP_NETLOAD_ADDRESS6) +
++(1L << GLIBTOP_NETLOAD_PREFIX6) +
++(1L << GLIBTOP_NETLOAD_SCOPE6);
++
++/* Init function. */
++
++void
++glibtop_init_netload_s (glibtop *server)
++{
++    server->sysdeps.netload = _glibtop_sysdeps_netload |
++	_glibtop_sysdeps_netload_data |
++	_glibtop_sysdeps_netload_bytes |
++	_glibtop_sysdeps_netload_packets;
++}
++
++
++/* Provides network statistics. */
++void
++glibtop_get_netload_s (glibtop *server, glibtop_netload *buf,
++		       const char *interface)
++{
++	/* XXX Unimplemented on Cygwin */
++	return NULL;
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/open.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/open.c	2007-02-17 22:38:57.281250000 -0600
+@@ -0,0 +1,70 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop.h>
++#include <glibtop/cpu.h>
++#include <glibtop/open.h>
++#include <glibtop/error.h>
++
++#include "glibtop_private.h"
++
++/* ======================================================= */
++
++/* Opens pipe to gtop server. Returns 0 on success and -1 on error. */
++
++#define FILENAME	"/proc/stat"
++
++void
++glibtop_open_s (glibtop *server, const char *program_name,
++		const unsigned long features,
++		const unsigned flags)
++{
++	char buffer [BUFSIZ], *p = buffer;
++
++	server->name = program_name;
++
++	file_to_buffer(server, buffer, FILENAME);
++
++	p = skip_line(p); /* cpu */
++
++	for (server->real_ncpu = 0; /* nop */; server->real_ncpu++) {
++
++		if (!check_cpu_line(server, p, server->real_ncpu)) {
++			server->real_ncpu--;
++			break;
++		}
++
++		p = skip_line(p);
++	}
++
++	server->ncpu = MIN(GLIBTOP_NCPU - 1, server->real_ncpu);
++
++	if (server->real_ncpu != server->ncpu) {
++		glibtop_warn_r(server,
++		       "This machine has %d CPUs, "
++		       "%d are being monitored.",
++		       server->real_ncpu + 1,
++		       server->ncpu + 1);
++	}
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/ppp.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/ppp.c	2007-02-17 22:33:42.468750000 -0600
+@@ -0,0 +1,59 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, October 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop.h>
++#include <glibtop/error.h>
++#include <glibtop/ppp.h>
++
++#include <sys/ioctl.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++
++#include <ctype.h>
++
++#include <glib.h>
++
++static const unsigned long _glibtop_sysdeps_ppp =
++(1L << GLIBTOP_PPP_STATE) + (1L << GLIBTOP_PPP_BYTES_IN) +
++(1L << GLIBTOP_PPP_BYTES_OUT);
++
++/* Init function. */
++
++void
++glibtop_init_ppp_s (glibtop *server)
++{
++	server->sysdeps.ppp = _glibtop_sysdeps_ppp;
++}
++
++/* Provides PPP/ISDN information. */
++
++void
++glibtop_get_ppp_s (glibtop *server, glibtop_ppp *buf, unsigned short device)
++{
++	int in, out, online;
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_PPP, 0);
++
++	memset (buf, 0, sizeof (glibtop_ppp));
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/procargs.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/procargs.c	2007-02-17 22:33:42.468750000 -0600
+@@ -0,0 +1,74 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop.h>
++#include <glibtop/error.h>
++#include <glibtop/procargs.h>
++
++static const unsigned long _glibtop_sysdeps_proc_args =
++(1L << GLIBTOP_PROC_ARGS_SIZE);
++
++/* Init function. */
++
++void
++glibtop_init_proc_args_s (glibtop *server)
++{
++	server->sysdeps.proc_args = _glibtop_sysdeps_proc_args;
++}
++
++/* Provides detailed information about a process. */
++
++char *
++glibtop_get_proc_args_s (glibtop *server, glibtop_proc_args *buf,
++			 pid_t pid, unsigned max_len)
++{
++	char filename[48]; /* magiv */
++
++	char *args;
++	gsize length;
++	GError *error = NULL;
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_PROC_ARGS, 0);
++
++	memset (buf, 0, sizeof (glibtop_proc_args));
++
++	sprintf (filename, "/proc/%d/cmdline", pid);
++
++	if(!g_file_get_contents(filename, &args, &length, &error)) {
++		g_error_free(error);
++		buf->size = 0;
++		return NULL;
++	}
++
++	if(max_len && max_len < length) {
++		args = g_realloc(args, max_len);
++		args[max_len - 1] = '\0';
++		length = max_len;
++	}
++
++	buf->size = length;
++	buf->flags = _glibtop_sysdeps_proc_args;
++
++	return args;
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/prockernel.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/prockernel.c	2007-02-17 22:33:42.484375000 -0600
+@@ -0,0 +1,80 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop.h>
++#include <glibtop/error.h>
++#include <glibtop/prockernel.h>
++
++#include "glibtop_private.h"
++
++static const unsigned long _glibtop_sysdeps_proc_kernel =
++(1L << GLIBTOP_PROC_KERNEL_K_FLAGS) + (1L << GLIBTOP_PROC_KERNEL_MIN_FLT) +
++(1L << GLIBTOP_PROC_KERNEL_MAJ_FLT) + (1L << GLIBTOP_PROC_KERNEL_CMIN_FLT) +
++(1L << GLIBTOP_PROC_KERNEL_CMAJ_FLT) + (1L << GLIBTOP_PROC_KERNEL_KSTK_ESP) +
++(1L << GLIBTOP_PROC_KERNEL_KSTK_EIP) + (1L << GLIBTOP_PROC_KERNEL_WCHAN);
++
++/* Init function. */
++
++void
++glibtop_init_proc_kernel_s (glibtop *server)
++{
++	server->sysdeps.proc_kernel = _glibtop_sysdeps_proc_kernel;
++}
++
++/* Provides detailed information about a process. */
++
++void
++glibtop_get_proc_kernel_s (glibtop *server, glibtop_proc_kernel *buf, pid_t pid)
++{
++	char buffer [BUFSIZ], *p;
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_PROC_KERNEL, 0);
++
++	memset (buf, 0, sizeof (glibtop_proc_kernel));
++
++	if (proc_stat_to_buffer (buffer, pid))
++		return;
++
++	p = proc_stat_after_cmd (buffer);
++	if (!p) return;
++
++	p = skip_multiple_token (p, 6);
++
++	buf->k_flags   = strtoull (p, &p, 0);
++	buf->min_flt   = strtoull (p, &p, 0);
++	buf->cmin_flt  = strtoull (p, &p, 0);
++	buf->maj_flt   = strtoull (p, &p, 0);
++	buf->cmaj_flt  = strtoull (p, &p, 0);
++
++	p = skip_multiple_token (p, 15);
++
++	buf->kstk_esp = strtoull (p, &p, 0);
++	buf->kstk_eip = strtoull (p, &p, 0);
++
++	p = skip_multiple_token (p, 4);
++
++	buf->nwchan = strtoull (p, &p, 0);
++
++	buf->flags = _glibtop_sysdeps_proc_kernel;
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/proclist.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/proclist.c	2007-02-17 22:33:42.484375000 -0600
+@@ -0,0 +1,170 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop/proclist.h>
++
++#include <glibtop/procuid.h>
++#include <glibtop/procstate.h>
++
++#include <sys/stat.h>
++#include <unistd.h>
++#include <dirent.h>
++#include <ctype.h>
++
++static const unsigned long _glibtop_sysdeps_proclist =
++(1L << GLIBTOP_PROCLIST_TOTAL) + (1L << GLIBTOP_PROCLIST_NUMBER) +
++(1L << GLIBTOP_PROCLIST_SIZE);
++
++/* Init function. */
++
++void
++glibtop_init_proclist_s (glibtop *server)
++{
++	server->sysdeps.proclist = _glibtop_sysdeps_proclist;
++}
++
++/* Fetch list of currently running processes.
++ *
++ * The interface of this function is a little bit different from the others:
++ * buf->flags is only set if the call succeeded, in this case pids_chain,
++ * a list of the pids of all currently running processes is returned,
++ * buf->number is the number of elements of this list and buf->size is
++ * the size of one single element (sizeof (unsigned)). The total size is
++ * stored in buf->total.
++ *
++ * The calling function has to free the memory to which a pointer is returned.
++ *
++ * On error, NULL is returned and buf->flags is zero. */
++
++unsigned *
++glibtop_get_proclist_s (glibtop *server, glibtop_proclist *buf,
++			gint64 which, gint64 arg)
++{
++	DIR *proc;
++	struct dirent *entry;
++	GArray *pids;
++	glibtop_proc_uid procuid;
++	glibtop_proc_state procstate;
++	struct stat statb;
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_PROCLIST, 0);
++
++	memset (buf, 0, sizeof (glibtop_proclist));
++
++	proc = opendir ("/proc");
++	if (!proc) return NULL;
++
++	if(stat("/proc", &statb)) return NULL;
++
++	pids = g_array_sized_new(FALSE, FALSE, sizeof(unsigned), statb.st_nlink);
++
++	/* read every every entry in /proc */
++
++	while((entry = readdir (proc))) {
++		unsigned pid;
++
++		if (!(pid = strtoul(entry->d_name, NULL, 10)))
++			continue;
++
++		switch (which & GLIBTOP_KERN_PROC_MASK) {
++		case GLIBTOP_KERN_PROC_ALL:
++			break;
++		case GLIBTOP_KERN_PROC_PID:
++			if ((unsigned) arg != pid)
++				continue;
++			break;
++		case GLIBTOP_KERN_PROC_UID:
++		{
++			char path[32];
++			struct stat path_stat;
++
++			snprintf(path, sizeof path, "/proc/%u", pid);
++
++			if (stat(path, &path_stat))
++				continue;
++
++			if ((uid_t) arg != path_stat.st_uid)
++				continue;
++		}
++			break;
++		case GLIBTOP_KERN_PROC_PGRP:
++			/* Do you really, really need this ? */
++			glibtop_get_proc_uid_s (server, &procuid, pid);
++			if (procuid.flags & (1L << GLIBTOP_PROC_UID_PGRP))
++				if ((int) arg != procuid.pgrp)
++					continue;
++			break;
++		case GLIBTOP_KERN_PROC_SESSION:
++			/* Do you really, really need this ? */
++			glibtop_get_proc_uid_s (server, &procuid, pid);
++			if (procuid.flags & (1L << GLIBTOP_PROC_UID_SESSION))
++				if ((int) arg != procuid.session)
++					continue;
++			break;
++		case GLIBTOP_KERN_PROC_TTY:
++			/* Do you really, really need this ? */
++			glibtop_get_proc_uid_s (server, &procuid, pid);
++			if (procuid.flags & (1L << GLIBTOP_PROC_UID_TTY))
++				if ((int) arg != procuid.tty)
++					continue;
++			break;
++		case GLIBTOP_KERN_PROC_RUID:
++			/* Do you really, really need this ? */
++			glibtop_get_proc_uid_s (server, &procuid, pid);
++			if (procuid.flags & (1L << GLIBTOP_PROC_UID_EUID))
++				if ((int) arg != procuid.euid)
++					continue;
++			break;
++		}
++
++		if (which & GLIBTOP_EXCLUDE_NOTTY) {
++			glibtop_get_proc_uid_s (server, &procuid, pid);
++			if (procuid.flags & (1L << GLIBTOP_PROC_UID_TTY))
++				if (procuid.tty == -1) continue;
++		}
++
++		if (which & GLIBTOP_EXCLUDE_IDLE) {
++			glibtop_get_proc_state_s (server, &procstate, pid);
++			if (procstate.flags & (1L << GLIBTOP_PROC_STATE_STATE))
++				if (procstate.state != GLIBTOP_PROCESS_RUNNING) continue;
++		}
++
++		if (which & GLIBTOP_EXCLUDE_SYSTEM) {
++			glibtop_get_proc_uid_s (server, &procuid, pid);
++			if (procuid.flags & (1L << GLIBTOP_PROC_UID_UID))
++				if (procuid.uid == 0) continue;
++		}
++
++		g_array_append_val(pids, pid);
++	}
++
++	closedir (proc);
++
++	buf->flags = _glibtop_sysdeps_proclist;
++	buf->size = sizeof (unsigned);
++	buf->number = pids->len;
++	buf->total = buf->number * buf->size;
++
++	return (unsigned*) g_array_free(pids, FALSE);
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/procmap.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/procmap.c	2007-02-17 22:33:42.500000000 -0600
+@@ -0,0 +1,226 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glib.h>
++
++#include <glibtop.h>
++#include <glibtop/error.h>
++#include <glibtop/procmap.h>
++
++#include <stddef.h>
++
++#include "glibtop_private.h"
++
++
++#define  MAPS_FILE "/proc/%u/maps"
++#define SMAPS_FILE "/proc/%u/smaps"
++
++
++#define PROC_MAPS_FORMAT ((sizeof(void*) == 8) \
++? "%16lx-%16lx %4c %16lx %02hx:%02hx %lu%*[ ]%[^\n]\n" \
++: "%08lx-%08lx %4c %08lx %02hx:%02hx %lu%*[ ]%[^\n]\n")
++
++
++static const unsigned long _glibtop_sysdeps_proc_map =
++(1L << GLIBTOP_PROC_MAP_NUMBER) + (1L << GLIBTOP_PROC_MAP_TOTAL) +
++(1L << GLIBTOP_PROC_MAP_SIZE);
++
++static const unsigned long _glibtop_sysdeps_map_entry =
++(1L << GLIBTOP_MAP_ENTRY_START) + (1L << GLIBTOP_MAP_ENTRY_END) +
++(1L << GLIBTOP_MAP_ENTRY_OFFSET) + (1L << GLIBTOP_MAP_ENTRY_PERM) +
++(1L << GLIBTOP_MAP_ENTRY_INODE) + (1L << GLIBTOP_MAP_ENTRY_FILENAME);
++
++static const unsigned long _glibtop_sysdeps_map_entry_smaps =
++(1UL << GLIBTOP_MAP_ENTRY_SIZE) + (1UL << GLIBTOP_MAP_ENTRY_RSS) +
++(1UL << GLIBTOP_MAP_ENTRY_SHARED_DIRTY) + (1UL << GLIBTOP_MAP_ENTRY_SHARED_CLEAN) +
++(1UL << GLIBTOP_MAP_ENTRY_PRIVATE_DIRTY) + (1UL << GLIBTOP_MAP_ENTRY_PRIVATE_CLEAN);
++
++
++/* Init function. */
++
++void
++glibtop_init_proc_map_s (glibtop *server)
++{
++	server->sysdeps.proc_map = _glibtop_sysdeps_proc_map;
++}
++
++/* Provides detailed information about a process. */
++
++
++static void
++add_smaps(glibtop *server, FILE *smaps, glibtop_map_entry *entry)
++{
++#define SMAP_OFFSET(MEMBER) offsetof(glibtop_map_entry, MEMBER)
++
++	struct smap_value {
++		const char *name;
++		ptrdiff_t offset;
++	};
++
++	const struct smap_value values[] = {
++		{ "Size:",		SMAP_OFFSET(size) },
++		{ "Rss:",		SMAP_OFFSET(rss) },
++		{ "Shared_Clean:",	SMAP_OFFSET(shared_clean) },
++		{ "Shared_Dirty:",	SMAP_OFFSET(shared_dirty) },
++		{ "Private_Clean:",	SMAP_OFFSET(private_clean) },
++		{ "Private_Dirty:",	SMAP_OFFSET(private_dirty) }
++	};
++
++	size_t i;
++
++	for (i = 0; i < G_N_ELEMENTS(values); ++i) {
++		char line[80];
++		char *offset;
++		guint64 *value;
++
++		if (!fgets(line, sizeof line, smaps)) {
++			glibtop_warn_io_r(server,
++					  "Could not read smaps value %s",
++					  values[i].name);
++			return;
++		}
++
++		offset = (void*) entry;
++		offset += values[i].offset;
++		value = (void*) offset;
++
++		*value = get_scaled(line, values[i].name);
++	}
++
++	entry->flags |= _glibtop_sysdeps_map_entry_smaps;
++
++#undef SMAP_OFFSET
++}
++
++
++
++
++glibtop_map_entry *
++glibtop_get_proc_map_s (glibtop *server, glibtop_proc_map *buf,	pid_t pid)
++{
++	char procfilename[GLIBTOP_MAP_FILENAME_LEN+1];
++
++	/*
++	  default size of 100 maybe inaccurate.
++	  It's the average number of entry per process on my laptop
++	*/
++
++	GArray *entry_list = g_array_sized_new(FALSE, FALSE,
++					       sizeof(glibtop_map_entry),
++					       100);
++	FILE *maps;
++	const char *filename;
++	gboolean has_smaps;
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_PROC_MAP, 0);
++
++	memset (buf, 0, sizeof (glibtop_proc_map));
++
++	filename = MAPS_FILE;
++
++	snprintf (procfilename, sizeof procfilename, filename, (unsigned)pid);
++
++	if((maps = fopen (procfilename, "r")) == NULL) {
++	  return (glibtop_map_entry*) g_array_free(entry_list, TRUE);
++	}
++
++	while(TRUE)
++	{
++		char line[1024];
++
++		unsigned long perm = 0;
++		int rv;
++		guint len;
++
++		unsigned short dev_major, dev_minor;
++		unsigned long start, end, offset, inode;
++		char flags[4];
++		char filename [GLIBTOP_MAP_FILENAME_LEN+1];
++
++		glibtop_map_entry *entry;
++
++		if (!fgets(line, sizeof line, maps))
++			break;
++
++		/* 8 arguments */
++		rv = sscanf(line, PROC_MAPS_FORMAT,
++			    &start, &end, flags, &offset,
++			    &dev_major, &dev_minor, &inode, filename);
++
++		if(rv == EOF || rv < 7)
++		  break;
++
++		if(rv == 7) /* no filename */
++		  filename[0] = '\0';
++
++		/* Compute access permissions. */
++
++		if (flags [0] == 'r')
++			perm |= GLIBTOP_MAP_PERM_READ;
++
++		if (flags [1] == 'w')
++			perm |= GLIBTOP_MAP_PERM_WRITE;
++
++		if (flags [2] == 'x')
++			perm |= GLIBTOP_MAP_PERM_EXECUTE;
++
++		if (flags [3] == 's')
++			perm |= GLIBTOP_MAP_PERM_SHARED;
++		else if (flags [3] == 'p')
++			perm |= GLIBTOP_MAP_PERM_PRIVATE;
++
++		/*
++		  avoid copying the entry, grow by 1 and point to the last
++		  element.
++		*/
++		len = entry_list->len;
++		g_array_set_size(entry_list, len + 1);
++		entry = &g_array_index(entry_list, glibtop_map_entry, len);
++
++		entry->flags = _glibtop_sysdeps_map_entry;
++		entry->start = (guint64) start;
++		entry->end = (guint64) end;
++		entry->offset = (guint64) offset;
++		entry->perm = (guint64) perm;
++#ifdef MKDEV
++		entry->device = (guint64) MKDEV(dev_major, dev_minor);
++#endif
++		entry->inode = (guint64) inode;
++		g_strlcpy(entry->filename, filename, sizeof entry->filename);
++
++		if (has_smaps)
++			add_smaps(server, maps, entry);
++
++	}
++
++	fclose (maps);
++
++	buf->flags = _glibtop_sysdeps_proc_map;
++
++	buf->number = entry_list->len;
++	buf->size = sizeof (glibtop_map_entry);
++	buf->total = buf->number * buf->size;
++
++	return (glibtop_map_entry*) g_array_free(entry_list, FALSE);
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/procmem.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/procmem.c	2007-02-17 22:33:42.500000000 -0600
+@@ -0,0 +1,88 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop.h>
++#include <glibtop/error.h>
++#include <glibtop/procmem.h>
++
++#include "glibtop_private.h"
++
++static const unsigned long _glibtop_sysdeps_proc_mem =
++(1L << GLIBTOP_PROC_MEM_VSIZE) + (1L << GLIBTOP_PROC_MEM_RSS) +
++(1L << GLIBTOP_PROC_MEM_RSS_RLIM);
++
++static const unsigned long _glibtop_sysdeps_proc_mem_statm =
++(1L << GLIBTOP_PROC_MEM_SIZE) + (1L << GLIBTOP_PROC_MEM_RESIDENT) +
++(1L << GLIBTOP_PROC_MEM_SHARE);
++
++
++/* Init function. */
++
++void
++glibtop_init_proc_mem_s (glibtop *server)
++{
++	server->sysdeps.proc_mem = _glibtop_sysdeps_proc_mem |
++	  _glibtop_sysdeps_proc_mem_statm;
++}
++
++/* Provides detailed information about a process. */
++
++void
++glibtop_get_proc_mem_s (glibtop *server, glibtop_proc_mem *buf, pid_t pid)
++{
++	char buffer [BUFSIZ], *p;
++	const size_t pagesize = get_page_size();
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_MEM, 0);
++
++	memset (buf, 0, sizeof (glibtop_proc_mem));
++
++	if (proc_stat_to_buffer (buffer, pid))
++		return;
++
++	p = proc_stat_after_cmd (buffer);
++	if (!p) return;
++
++	p = skip_multiple_token (p, 20);
++
++	buf->vsize    = strtoull (p, &p, 0);
++	buf->rss      = strtoull (p, &p, 0);
++	buf->rss_rlim = strtoull (p, &p, 0);
++
++	buf->flags = _glibtop_sysdeps_proc_mem;
++
++	if (proc_statm_to_buffer (buffer, pid))
++		return;
++
++	buf->size     = strtoull (buffer, &p, 0);
++	buf->resident = strtoull (p, &p, 0);
++	buf->share    = strtoull (p, &p, 0);
++
++	buf->size     *= pagesize;
++	buf->resident *= pagesize;
++	buf->share    *= pagesize;
++	buf->rss      *= pagesize;
++
++	buf->flags |= _glibtop_sysdeps_proc_mem_statm;
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/procopenfiles.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/procopenfiles.c	2007-02-17 22:33:42.515625000 -0600
+@@ -0,0 +1,51 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   Copyright (C) 2004 Nicolás Lichtmaier
++   This file is part of LibGTop 1.0.
++
++   Modified by Nicolás Lichtmaier to give a process open files.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop.h>
++#include <glibtop/error.h>
++#include <glibtop/procopenfiles.h>
++
++static const unsigned long _glibtop_sysdeps_proc_open_files =
++(1L << GLIBTOP_PROC_OPEN_FILES_NUMBER)|
++(1L << GLIBTOP_PROC_OPEN_FILES_TOTAL)|
++(1L << GLIBTOP_PROC_OPEN_FILES_SIZE);
++
++/* Init function. */
++
++void
++glibtop_init_proc_open_files_s (glibtop *server)
++{
++	server->sysdeps.proc_open_files = _glibtop_sysdeps_proc_open_files;
++}
++
++
++/* XXX Unimplemented on Cygwin */
++glibtop_open_files_entry *
++glibtop_get_proc_open_files_s (glibtop *server, glibtop_proc_open_files *buf,	pid_t pid)
++{
++	return NULL;
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/procsegment.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/procsegment.c	2007-02-17 22:33:42.515625000 -0600
+@@ -0,0 +1,97 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop/error.h>
++#include <glibtop/procsegment.h>
++
++#include "glibtop_private.h"
++
++static const unsigned long _glibtop_sysdeps_proc_segment =
++(1L << GLIBTOP_PROC_SEGMENT_START_CODE) +
++(1L << GLIBTOP_PROC_SEGMENT_END_CODE) +
++(1L << GLIBTOP_PROC_SEGMENT_START_STACK);
++
++static const unsigned long _glibtop_sysdeps_proc_segment_statm =
++(1L << GLIBTOP_PROC_SEGMENT_TEXT_RSS) +
++/* Disabled due to bug in the Linux Kernel. */
++/* (1L << GLIBTOP_PROC_SEGMENT_SHLIB_RSS) + */
++(1L << GLIBTOP_PROC_SEGMENT_DATA_RSS) +
++(1L << GLIBTOP_PROC_SEGMENT_DIRTY_SIZE);
++
++/* Init function. */
++
++void
++glibtop_init_proc_segment_s (glibtop *server)
++{
++	server->sysdeps.proc_segment = _glibtop_sysdeps_proc_segment |
++	  _glibtop_sysdeps_proc_segment_statm;
++}
++
++/* Provides detailed information about a process. */
++
++void
++glibtop_get_proc_segment_s (glibtop *server, glibtop_proc_segment *buf,
++			    pid_t pid)
++{
++	char buffer [BUFSIZ], *p;
++	const size_t pagesize = get_page_size();
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_PROC_SEGMENT, 0);
++
++	memset (buf, 0, sizeof (glibtop_proc_segment));
++
++	if (proc_stat_to_buffer (buffer, pid))
++		return;
++
++	p = proc_stat_after_cmd (buffer);
++	if (!p) return;
++
++	p = skip_multiple_token (p, 23);
++
++	buf->start_code  = strtoull (p, &p, 0);
++	buf->end_code    = strtoull (p, &p, 0);
++	buf->start_stack = strtoull (p, &p, 0);
++
++	buf->flags = _glibtop_sysdeps_proc_segment;
++
++	if (proc_statm_to_buffer (buffer, pid))
++		return;
++
++	p = skip_multiple_token (buffer, 3);
++
++	/* This doesn't work very well due to a bug in the Linux kernel.
++	 * I'll submit a patch to the kernel mailing list soon. */
++
++	buf->text_rss   = strtoull (p, &p, 0);
++	buf->shlib_rss  = strtoull (p, &p, 0);
++	buf->data_rss   = strtoull (p, &p, 0);
++	buf->dirty_size = strtoull (p, &p, 0);
++
++	buf->text_rss   *= pagesize;
++	buf->shlib_rss  *= pagesize;
++	buf->data_rss   *= pagesize;
++	buf->dirty_size *= pagesize;
++
++	buf->flags |= _glibtop_sysdeps_proc_segment_statm;
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/procsignal.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/procsignal.c	2007-02-17 22:33:42.531250000 -0600
+@@ -0,0 +1,68 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop.h>
++#include <glibtop/error.h>
++#include <glibtop/procsignal.h>
++
++#include "glibtop_private.h"
++
++static const unsigned long _glibtop_sysdeps_proc_signal =
++(1L << GLIBTOP_PROC_SIGNAL_SIGNAL) + (1L << GLIBTOP_PROC_SIGNAL_BLOCKED) +
++(1L << GLIBTOP_PROC_SIGNAL_SIGIGNORE) + (1L << GLIBTOP_PROC_SIGNAL_SIGCATCH);
++
++/* Init function. */
++
++void
++glibtop_init_proc_signal_s (glibtop *server)
++{
++	server->sysdeps.proc_signal = _glibtop_sysdeps_proc_signal;
++}
++
++/* Provides detailed information about a process. */
++
++void
++glibtop_get_proc_signal_s (glibtop *server, glibtop_proc_signal *buf, pid_t pid)
++{
++	char buffer [BUFSIZ], *p;
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_PROC_SIGNAL, 0);
++
++	memset (buf, 0, sizeof (glibtop_proc_signal));
++
++	if (proc_stat_to_buffer (buffer, pid))
++		return;
++
++	p = proc_stat_after_cmd (buffer);
++	if (!p) return;
++
++	p = skip_multiple_token (p, 28);
++
++	buf->signal [0]    = strtoull (p, &p, 0);
++	buf->blocked [0]   = strtoull (p, &p, 0);
++	buf->sigignore [0] = strtoull (p, &p, 0);
++	buf->sigcatch [0]  = strtoull (p, &p, 0);
++
++	buf->flags = _glibtop_sysdeps_proc_signal;
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/procstate.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/procstate.c	2007-02-17 22:33:42.531250000 -0600
+@@ -0,0 +1,124 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop.h>
++#include <glibtop/error.h>
++#include <glibtop/procstate.h>
++
++#include "glibtop_private.h"
++
++#include <sys/stat.h>
++
++static const unsigned long _glibtop_sysdeps_proc_state =
++(1L << GLIBTOP_PROC_STATE_CMD) + (1L << GLIBTOP_PROC_STATE_STATE);
++
++static const unsigned long _glibtop_sysdeps_proc_state_uid =
++(1L << GLIBTOP_PROC_STATE_UID) + (1L << GLIBTOP_PROC_STATE_GID);
++
++/* Init function. */
++
++void
++glibtop_init_proc_state_s (glibtop *server)
++{
++	server->sysdeps.proc_state = _glibtop_sysdeps_proc_state |
++		_glibtop_sysdeps_proc_state_uid;
++}
++
++/* Provides detailed information about a process. */
++
++void
++glibtop_get_proc_state_s (glibtop *server, glibtop_proc_state *buf, pid_t pid)
++{
++	char buffer [BUFSIZ], *p;
++	struct stat statb;
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_PROC_STATE, 0);
++
++	memset (buf, 0, sizeof (glibtop_proc_state));
++
++	/* IMPORTANT NOTICE: For security reasons it is extremely important
++	 *                   that the 'uid' and 'gid' fields have correct
++	 *                   values; NEVER set their flags values if this
++	 *                   is not the case !!! */
++
++	sprintf (buffer, "/proc/%d", pid);
++
++	if (stat (buffer, &statb))
++		return;
++
++	/* For security reasons we use stat () since it is
++	 * more failsafe than parsing the file. */
++
++	buf->uid = statb.st_uid;
++	buf->gid = statb.st_gid;
++
++	buf->flags = _glibtop_sysdeps_proc_state_uid;
++
++	/* Now we read the remaining fields. */
++
++	if (proc_stat_to_buffer (buffer, pid))
++		return;
++
++	p = proc_stat_after_cmd(buffer);
++	p = next_token(p);
++
++	switch(*p)
++	  {
++	  case 'R':
++	    buf->state = GLIBTOP_PROCESS_RUNNING;
++	    break;
++
++	  case 'Z':
++	    buf->state = GLIBTOP_PROCESS_ZOMBIE;
++	    break;
++
++	  case 'S':
++	    buf->state = GLIBTOP_PROCESS_INTERRUPTIBLE;
++	    break;
++
++	  case 'T':
++	    buf->state = GLIBTOP_PROCESS_STOPPED;
++	    break;
++
++	  case 'D':
++	    buf->state = GLIBTOP_PROCESS_UNINTERRUPTIBLE;
++	    break;
++
++	  case 'W':
++	    buf->state = GLIBTOP_PROCESS_SWAPPING;
++	    break;
++
++	  case 'X':
++	    buf->state = GLIBTOP_PROCESS_DEAD;
++	    break;
++	  }
++
++	p = skip_token (buffer); /* pid */
++	if (G_UNLIKELY(*p++ != '('))
++		glibtop_error_r (server, "Bad data in /proc/%d/stat", pid);
++
++	g_strlcpy (buf->cmd, p, sizeof buf->cmd);
++
++	buf->flags |= _glibtop_sysdeps_proc_state;
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/proctime.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/proctime.c	2007-02-17 22:33:42.546875000 -0600
+@@ -0,0 +1,136 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop.h>
++#include <glibtop/error.h>
++#include <glibtop/proctime.h>
++#include <glibtop/uptime.h>
++
++#include "glibtop_private.h"
++
++static const unsigned long _glibtop_sysdeps_proc_time =
++(1L << GLIBTOP_PROC_TIME_UTIME) + (1L << GLIBTOP_PROC_TIME_CUTIME) +
++(1L << GLIBTOP_PROC_TIME_RTIME) +
++(1L << GLIBTOP_PROC_TIME_STIME) + (1L << GLIBTOP_PROC_TIME_CSTIME) +
++(1L << GLIBTOP_PROC_TIME_FREQUENCY) + (1L << GLIBTOP_PROC_TIME_TIMEOUT) +
++(1L << GLIBTOP_PROC_TIME_IT_REAL_VALUE) + (1L << GLIBTOP_PROC_TIME_START_TIME);
++
++static const unsigned long _glibtop_sysdeps_proc_time_smp =
++(1L << GLIBTOP_PROC_TIME_XCPU_UTIME) + (1L << GLIBTOP_PROC_TIME_XCPU_STIME);
++
++/* Init function. */
++
++void
++glibtop_init_proc_time_s (glibtop *server)
++{
++	server->sysdeps.proc_time = _glibtop_sysdeps_proc_time;
++
++	if (server->ncpu)
++		server->sysdeps.proc_time |= _glibtop_sysdeps_proc_time_smp;
++}
++
++/* Provides detailed information about a process. */
++
++void
++glibtop_get_proc_time_s (glibtop *server, glibtop_proc_time *buf, pid_t pid)
++{
++	char buffer [BUFSIZ], *p;
++	int i;
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_PROC_TIME, 0);
++
++	memset (buf, 0, sizeof (glibtop_proc_time));
++
++	if (proc_stat_to_buffer (buffer, pid))
++		return;
++
++	p = proc_stat_after_cmd (buffer);
++	if (!p) return;
++
++	p = skip_multiple_token (p, 11);
++
++	/* clock_t  (1/100 s) */
++	buf->utime  = strtoull (p, &p, 0);
++	buf->stime  = strtoull (p, &p, 0);
++	buf->rtime = buf->utime + buf->stime;
++
++	buf->cutime = strtoull (p, &p, 0);
++	buf->cstime = strtoull (p, &p, 0);
++
++	p = skip_multiple_token (p, 3);
++
++	/* timeout is 0 on 2.4 and "thread_number" on 2.6
++	   lets skip it (using previous skip_multiple_token)
++	   buf->timeout       = strtoull (p, &p, 0);
++	*/
++	buf->it_real_value = strtoull (p, &p, 0);
++
++	/* seconds since epoch */
++	{
++	  /*
++	     See libgtop documentation.
++
++	     #ifdef __KERNEL__
++	     ...
++	     *
++	     * Have the 32 bit jiffies value wrap 5 minutes after boot
++	     * so jiffies wrap bugs show up earlier.
++	     *
++	     #define INITIAL_JIFFIES ((unsigned long)(unsigned int) (-300*HZ))
++	     ...
++	     #endif
++
++	     start_time may be incremented by INITIAL_JIFFIES, so start_time
++	     may be not be exact. You may also get wrong start_time if your
++	     system clock is not synchronised with you hardware clock.
++	     'man hwclock'
++	  */
++	  buf->start_time = get_boot_time(server) + strtoull (p, &p, 0) / 100;
++	}
++
++	buf->frequency = 100;
++
++	buf->flags = _glibtop_sysdeps_proc_time;
++
++	if (!server->ncpu)
++		return;
++
++	/* FIXME: doesn't work with 2.6 */
++	if (proc_file_to_buffer (buffer, "/proc/%d/cpu", pid))
++		return;
++
++	p = skip_multiple_token (p, 3);
++
++	for (i = 0; i <= server->ncpu; i++) {
++
++		if (!check_cpu_line_warn(server, p + 1, i))
++			break;
++
++		p = skip_token(p);
++		buf->xcpu_utime [i] = strtoull (p, &p, 0);
++		buf->xcpu_stime [i] = strtoull (p, &p, 0);
++	}
++
++	buf->flags |= _glibtop_sysdeps_proc_time_smp;
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/procuid.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/procuid.c	2007-02-17 22:33:42.546875000 -0600
+@@ -0,0 +1,119 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop.h>
++#include <glibtop/error.h>
++#include <glibtop/procuid.h>
++
++#include "glibtop_private.h"
++
++static const unsigned long _glibtop_sysdeps_proc_uid =
++(1L << GLIBTOP_PROC_UID_UID) + (1L << GLIBTOP_PROC_UID_EUID) +
++(1L << GLIBTOP_PROC_UID_GID) + (1L << GLIBTOP_PROC_UID_EGID);
++
++static const unsigned long _glibtop_sysdeps_proc_uid_stat =
++(1L << GLIBTOP_PROC_UID_PID) + (1L << GLIBTOP_PROC_UID_PPID) +
++(1L << GLIBTOP_PROC_UID_PGRP) + (1L << GLIBTOP_PROC_UID_SESSION) +
++(1L << GLIBTOP_PROC_UID_TTY) + (1L << GLIBTOP_PROC_UID_TPGID) +
++(1L << GLIBTOP_PROC_UID_PRIORITY) + (1L << GLIBTOP_PROC_UID_NICE);
++
++
++/* Init function. */
++
++void
++glibtop_init_proc_uid_s (glibtop *server)
++{
++	server->sysdeps.proc_uid = _glibtop_sysdeps_proc_uid |
++		_glibtop_sysdeps_proc_uid_stat;
++}
++
++/* Provides detailed information about a process. */
++
++void
++glibtop_get_proc_uid_s (glibtop *server, glibtop_proc_uid *buf, pid_t pid)
++{
++	char buffer [BUFSIZ], *p;
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_PROC_UID, 0);
++
++	memset (buf, 0, sizeof (glibtop_proc_uid));
++
++	if (proc_status_to_buffer (buffer, pid))
++		return;
++
++	/* Search substring 'Pid:' */
++
++	p = strstr (buffer, "\nPid:");
++	if (!p) return;
++
++	p = skip_token (p); /* "Pid:" */
++	buf->pid = strtol (p, &p, 0);
++
++	p = skip_token (p); /* "PPid:" */
++	buf->ppid = strtol (p, &p, 0);
++
++	/* Maybe future Linux versions place something between
++	 * "PPid" and "Uid", so we catch this here. */
++	p = strstr (p, "\nUid:");
++	if (!p) return;
++
++	p = skip_token (p); /* "Uid:" */
++	buf->uid  = strtol (p, &p, 0);
++	buf->euid = strtol (p, &p, 0);
++
++	/* We don't know how many entries on the "Uid:" line
++	 * future Linux version will have, so we catch this here. */
++	p = strstr (p, "\nGid:");
++	if (!p) return;
++
++	p = skip_token (p); /* "Gid:" */
++	buf->gid  = strtol (p, &p, 0);
++	buf->egid = strtol (p, &p, 0);
++
++	buf->flags = _glibtop_sysdeps_proc_uid;
++
++	if (proc_stat_to_buffer (buffer, pid))
++		return;
++
++	p = proc_stat_after_cmd (buffer);
++	if (!p) return;
++
++	p = skip_multiple_token (p, 2);
++
++	buf->pgrp    = strtol (p, &p, 0);
++	buf->session = strtol (p, &p, 0);
++	buf->tty     = strtol (p, &p, 0);
++	buf->tpgid   = strtol (p, &p, 0);
++
++	p = skip_multiple_token (p, 9);
++
++	buf->priority = strtol (p, &p, 0);
++	buf->nice     = strtol (p, &p, 0);
++
++	if (buf->tty == 0)
++		/* the old notty val, update elsewhere bef. moving to 0 */
++		buf->tty = -1;
++
++	buf->flags |= _glibtop_sysdeps_proc_uid_stat;
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/sem_limits.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/sem_limits.c	2007-02-17 22:33:42.562500000 -0600
+@@ -0,0 +1,88 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop/sem_limits.h>
++
++#define _KERNEL
++#include <sys/ipc.h>
++#include <sys/sem.h>
++
++#ifdef _SEM_SEMUN_UNDEFINED
++
++/* glibc 2.1 will no longer defines semun, instead it defines
++ * _SEM_SEMUN_UNDEFINED so users can define semun on their own.
++ * Thanks to Albert K T Hui <avatar@deva.net>. */
++
++union semun
++{
++	int val;
++	struct semid_ds *buf;
++	unsigned short int *array;
++	struct seminfo *__buf;
++};
++#endif
++
++static const unsigned long _glibtop_sysdeps_sem_limits =
++(1L << GLIBTOP_IPC_SEMMAP) + (1L << GLIBTOP_IPC_SEMMNI) +
++(1L << GLIBTOP_IPC_SEMMNS) + (1L << GLIBTOP_IPC_SEMMNU) +
++(1L << GLIBTOP_IPC_SEMMSL) + (1L << GLIBTOP_IPC_SEMOPM) +
++(1L << GLIBTOP_IPC_SEMUME) + (1L << GLIBTOP_IPC_SEMUSZ) +
++(1L << GLIBTOP_IPC_SEMVMX) + (1L << GLIBTOP_IPC_SEMAEM);
++
++/* Init function. */
++
++void
++glibtop_init_sem_limits_s (glibtop *server)
++{
++	server->sysdeps.sem_limits = _glibtop_sysdeps_sem_limits;
++}
++
++/* Provides information about sysv ipc limits. */
++
++void
++glibtop_get_sem_limits_s (glibtop *server, glibtop_sem_limits *buf)
++{
++	struct seminfo	seminfo;
++	union semun	arg;
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_SEM_LIMITS, 0);
++
++	memset (buf, 0, sizeof (glibtop_sem_limits));
++
++	buf->flags = _glibtop_sysdeps_sem_limits;
++
++	arg.array = (void *) &seminfo;
++	semctl (0, 0, IPC_INFO, arg);
++
++	buf->semmap = seminfo.semmap;
++	buf->semmni = seminfo.semmni;
++	buf->semmns = seminfo.semmns;
++	buf->semmnu = seminfo.semmnu;
++	buf->semmsl = seminfo.semmsl;
++	buf->semopm = seminfo.semopm;
++	buf->semume = seminfo.semume;
++	buf->semusz = seminfo.semusz;
++	buf->semvmx = seminfo.semvmx;
++	buf->semaem = seminfo.semaem;
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/shm_limits.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/shm_limits.c	2007-02-17 22:33:42.578125000 -0600
+@@ -0,0 +1,63 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop/shm_limits.h>
++
++#define _KERNEL
++#include <sys/ipc.h>
++#include <sys/shm.h>
++
++static const unsigned long _glibtop_sysdeps_shm_limits =
++(1L << GLIBTOP_IPC_SHMMAX) + (1L << GLIBTOP_IPC_SHMMIN) +
++(1L << GLIBTOP_IPC_SHMMNI) + (1L << GLIBTOP_IPC_SHMSEG) +
++(1L << GLIBTOP_IPC_SHMALL);
++
++/* Init function. */
++
++void
++glibtop_init_shm_limits_s (glibtop *server)
++{
++	server->sysdeps.shm_limits = _glibtop_sysdeps_shm_limits;
++}
++
++/* Provides information about sysv ipc limits. */
++
++void
++glibtop_get_shm_limits_s (glibtop *server, glibtop_shm_limits *buf)
++{
++	struct shminfo shminfo;
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_SHM_LIMITS, 0);
++
++	memset (buf, 0, sizeof (glibtop_shm_limits));
++
++	shmctl (0, IPC_INFO, (void *) &shminfo);
++
++	buf->shmmax = shminfo.shmmax;
++	buf->shmmin = shminfo.shmmin;
++	buf->shmmni = shminfo.shmmni;
++	buf->shmseg = shminfo.shmseg;
++	buf->shmall = shminfo.shmall;
++	buf->flags = _glibtop_sysdeps_shm_limits;
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/siglist.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/siglist.c	2007-02-17 22:33:42.578125000 -0600
+@@ -0,0 +1,145 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++
++#include <config.h>
++#include <glibtop/signal.h>
++
++#include <signal.h>
++
++
++#if 0 /* comment */
++perl -nle 'print "{$1,\t\"$1\",\t\"$2\"}," if m|^#define\s*(SIG[A-Z0-9]+).*?/\*\s*(.*?)\s*\*/|'
++	< /usr/include/bits/signum.h
++#endif
++
++
++const glibtop_signame glibtop_sys_siglist [] =
++{
++#ifdef SIGHUP
++	{SIGHUP,	"SIGHUP",       "Hangup (POSIX)."},
++#endif
++#ifdef SIGINT
++	{SIGINT,	"SIGINT",       "Interrupt (ANSI)."},
++#endif
++#ifdef SIGQUIT
++	{SIGQUIT,       "SIGQUIT",      "Quit (POSIX)."},
++#endif
++#ifdef SIGILL
++	{SIGILL,	"SIGILL",       "Illegal instruction (ANSI)."},
++#endif
++#ifdef SIGTRAP
++	{SIGTRAP,       "SIGTRAP",      "Trace trap (POSIX)."},
++#endif
++#ifdef SIGABRT
++	{SIGABRT,       "SIGABRT",      "Abort (ANSI)."},
++#endif
++#ifdef SIGIOT
++	{SIGIOT,	"SIGIOT",       "IOT trap (4.2 BSD)."},
++#endif
++#ifdef SIGBUS
++	{SIGBUS,	"SIGBUS",       "BUS error (4.2 BSD)."},
++#endif
++#ifdef SIGFPE
++	{SIGFPE,	"SIGFPE",       "Floating-point exception (ANSI)."},
++#endif
++#ifdef SIGKILL
++	{SIGKILL,       "SIGKILL",      "Kill, unblockable (POSIX)."},
++#endif
++#ifdef SIGUSR1
++	{SIGUSR1,	"SIGUSR1",      "User-defined signal 1 (POSIX)."},
++#endif
++#ifdef SIGSEGV
++	{SIGSEGV,	"SIGSEGV",      "Segmentation violation (ANSI)."},
++#endif
++#ifdef SIGUSR2
++	{SIGUSR2,	"SIGUSR2",      "User-defined signal 2 (POSIX)."},
++#endif
++#ifdef SIGPIPE
++	{SIGPIPE,       "SIGPIPE",      "Broken pipe (POSIX)."},
++#endif
++#ifdef SIGALRM
++	{SIGALRM,       "SIGALRM",      "Alarm clock (POSIX)."},
++#endif
++#ifdef SIGTERM
++	{SIGTERM,       "SIGTERM",      "Termination (ANSI)."},
++#endif
++#ifdef SIGSTKFLT
++	{SIGSTKFLT,     "SIGSTKFLT",    "Stack fault."},
++#endif
++#ifdef SIGCLD
++	{SIGCLD,	"SIGCLD",       "Same as SIGCHLD (System V)."},
++#endif
++#ifdef SIGCHLD
++	{SIGCHLD,       "SIGCHLD",      "Child status has changed (POSIX)."},
++#endif
++#ifdef SIGCONT
++	{SIGCONT,       "SIGCONT",      "Continue (POSIX)."},
++#endif
++#ifdef SIGSTOP
++	{SIGSTOP,       "SIGSTOP",      "Stop, unblockable (POSIX)."},
++#endif
++#ifdef SIGTSTP
++	{SIGTSTP,       "SIGTSTP",      "Keyboard stop (POSIX)."},
++#endif
++#ifdef SIGTTIN
++	{SIGTTIN,       "SIGTTIN",      "Background read from tty (POSIX)."},
++#endif
++#ifdef SIGTTOU
++	{SIGTTOU,       "SIGTTOU",      "Background write to tty (POSIX)."},
++#endif
++#ifdef SIGURG
++	{SIGURG,	"SIGURG",       "Urgent condition on socket (4.2 BSD)."},
++#endif
++#ifdef SIGXCPU
++	{SIGXCPU,       "SIGXCPU",      "CPU limit exceeded (4.2 BSD)."},
++#endif
++#ifdef SIGXFSZ
++	{SIGXFSZ,       "SIGXFSZ",      "File size limit exceeded (4.2 BSD)."},
++#endif
++#ifdef SIGVTALRM
++	{SIGVTALRM,     "SIGVTALRM",    "Virtual alarm clock (4.2 BSD)."},
++#endif
++#ifdef SIGPROF
++	{SIGPROF,       "SIGPROF",      "Profiling alarm clock (4.2 BSD)."},
++#endif
++#ifdef SIGWINCH
++	{SIGWINCH,      "SIGWINCH",     "Window size change (4.3 BSD, Sun)."},
++#endif
++#ifdef SIGPOLL
++	{SIGPOLL,       "SIGPOLL",      "Pollable event occurred (System V)."},
++#endif
++#ifdef SIGIO
++	{SIGIO,		"SIGIO",	"I/O now possible (4.2 BSD)."},
++#endif
++#ifdef SIGPWR
++	{SIGPWR,	"SIGPWR",       "Power failure restart (System V)."},
++#endif
++#ifdef SIGSYS
++	{SIGSYS,	"SIGSYS",       "Bad system call."},
++#endif
++#ifdef SIGUNUSED
++	{SIGUNUSED,	"SIGUNUSED",	""},
++#endif
++	{0,		NULL,		NULL}
++};
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/swap.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/swap.c	2007-02-17 22:33:42.593750000 -0600
+@@ -0,0 +1,83 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop/error.h>
++#include <glibtop/swap.h>
++
++#include "glibtop_private.h"
++
++#include <fcntl.h>
++
++static const unsigned long _glibtop_sysdeps_swap =
++(1L << GLIBTOP_SWAP_TOTAL) + (1L << GLIBTOP_SWAP_USED) +
++(1L << GLIBTOP_SWAP_FREE);
++
++static const unsigned long _glibtop_sysdeps_swap_paging =
++(1L << GLIBTOP_SWAP_PAGEIN) + (1L << GLIBTOP_SWAP_PAGEOUT);
++
++/* Init function. */
++
++void
++glibtop_init_swap_s (glibtop *server)
++{
++	server->sysdeps.swap = _glibtop_sysdeps_swap |
++		_glibtop_sysdeps_swap_paging;
++}
++
++/* Provides information about swap usage. */
++
++#define MEMINFO		"/proc/meminfo"
++#define PROC_STAT	"/proc/stat"
++
++void
++glibtop_get_swap_s (glibtop *server, glibtop_swap *buf)
++{
++	char buffer [BUFSIZ], *p;
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_SWAP, 0);
++
++	memset (buf, 0, sizeof (glibtop_swap));
++
++	file_to_buffer(server, buffer, MEMINFO);
++
++	buf->total = get_scaled(buffer, "SwapTotal:");
++	buf->free = get_scaled(buffer, "SwapFree:");
++	buf->used = buf->total - buf->free;
++
++	buf->flags = _glibtop_sysdeps_swap;
++
++	file_to_buffer (server, buffer, PROC_STAT);
++
++	p = strstr (buffer, "\nswap");
++
++	if(p)
++	{
++		p = skip_token (p);
++
++		buf->pagein  = strtoull (p, &p, 0);
++		buf->pageout = strtoull (p, &p, 0);
++
++		buf->flags |= _glibtop_sysdeps_swap_paging;
++	}
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/sysinfo.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/sysinfo.c	2007-02-17 22:33:42.593750000 -0600
+@@ -0,0 +1,103 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop/error.h>
++#include <glibtop/cpu.h>
++#include <glibtop/sysinfo.h>
++
++#include "glibtop_private.h"
++
++#define FILENAME "/proc/cpuinfo"
++
++static const unsigned long _glibtop_sysdeps_sysinfo =
++(1L << GLIBTOP_SYSINFO_CPUINFO);
++
++static glibtop_sysinfo sysinfo = { .flags = 0 };
++
++static void
++init_sysinfo (glibtop *server)
++{
++	char buffer [BUFSIZ];
++	gchar ** processors;
++
++	if(G_LIKELY(sysinfo.flags)) return;
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_CPU, 0);
++
++	file_to_buffer(server, buffer, FILENAME);
++
++	/* cpuinfo records are seperated by a blank line */
++	processors = g_strsplit(buffer, "\n\n", 0);
++
++	for(sysinfo.ncpu = 0;
++	    sysinfo.ncpu < GLIBTOP_NCPU && processors[sysinfo.ncpu] && *processors[sysinfo.ncpu];
++	    sysinfo.ncpu++) {
++
++		gchar **parts, **p;
++
++		glibtop_entry * const cpuinfo = &sysinfo.cpuinfo[sysinfo.ncpu];
++
++		cpuinfo->labels = g_ptr_array_new ();
++
++		cpuinfo->values = g_hash_table_new_full(g_str_hash, g_str_equal,
++							g_free, g_free);
++
++		cpuinfo->descriptions = g_hash_table_new_full(g_str_hash, g_str_equal,
++							g_free, g_free);
++
++		/* "<key>    : <value>" */
++		parts = g_strsplit_set(processors[sysinfo.ncpu], ":\n", 0);
++
++		for(p = parts; *p && *(p+1); p += 2) {
++
++			/* stole the allocated memory */
++			gchar * const key   = g_strstrip(   *p   );
++			gchar * const value = g_strstrip( *(p+1) );
++
++			g_ptr_array_add(cpuinfo->labels, key);
++			g_hash_table_insert(cpuinfo->values, key, value);
++		}
++
++
++		/* the last key has no value and has not been added */
++		if(*p) g_free(*p);
++
++		/* just g_free instead of g_strvfree because we stole
++		   the memory*/
++
++		g_free(parts);
++
++	}
++
++	g_strfreev(processors);
++
++	sysinfo.flags = _glibtop_sysdeps_sysinfo;
++}
++
++const glibtop_sysinfo *
++glibtop_get_sysinfo_s (glibtop *server)
++{
++	init_sysinfo (server);
++	return &sysinfo;
++}
+--- origsrc/libgtop-2.14.7/sysdeps/cygwin/uptime.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/cygwin/uptime.c	2007-02-17 22:33:42.609375000 -0600
+@@ -0,0 +1,65 @@
++/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
++
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
++
++   LibGTop is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2 of the License,
++   or (at your option) any later version.
++
++   LibGTop is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++   for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with LibGTop; see the file COPYING. If not, write to the
++   Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++   Boston, MA 02111-1307, USA.
++*/
++
++#include <config.h>
++#include <glibtop/error.h>
++#include <glibtop/uptime.h>
++
++#include "glibtop_private.h"
++
++#include <time.h>
++
++static const unsigned long _glibtop_sysdeps_uptime =
++  (1UL << GLIBTOP_UPTIME_UPTIME) \
+++ (1UL << GLIBTOP_UPTIME_IDLETIME) \
+++ (1UL << GLIBTOP_UPTIME_BOOT_TIME);
++
++/* Init function. */
++
++void
++glibtop_init_uptime_s (glibtop *server)
++{
++	server->sysdeps.uptime = _glibtop_sysdeps_uptime;
++}
++
++/* Provides uptime and idle time. */
++
++#define FILENAME	"/proc/uptime"
++
++void
++glibtop_get_uptime_s (glibtop *server, glibtop_uptime *buf)
++{
++	char buffer [BUFSIZ], *p;
++
++	glibtop_init_s (&server, GLIBTOP_SYSDEPS_UPTIME, 0);
++
++	memset (buf, 0, sizeof (glibtop_uptime));
++
++	file_to_buffer(server, buffer, FILENAME);
++
++	buf->uptime   = g_ascii_strtod (buffer, &p);
++	buf->idletime = g_ascii_strtod (p, &p);
++	buf->boot_time = get_boot_time(server);
++
++	buf->flags = _glibtop_sysdeps_uptime;
++}
+--- origsrc/libgtop-2.14.7/sysdeps/linux/Makefile.am	2007-01-02 16:50:27.000000000 -0600
++++ src/libgtop-2.14.7/sysdeps/linux/Makefile.am	2007-02-17 22:33:42.609375000 -0600
+@@ -12,7 +12,7 @@
+ 
+ libgtop_sysdeps_2_0_la_LIBADD	=  @GLIB_LIBS@
+ 
+-# libgtop_sysdeps_2_0_la_LDFLAGS	= $(LT_VERSION_INFO)
++#libgtop_sysdeps_2_0_la_LDFLAGS	= $(LT_VERSION_INFO)
+ 
+ libgtopinclude_HEADERS		= glibtop_server.h glibtop_machine.h
+ libgtopincludedir		= $(includedir)/libgtop-2.0
