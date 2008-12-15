@@ -1,0 +1,14 @@
+ORIG_PN="libgtop"
+inherit gnome2
+
+PATCH_URI="
+	2.24.0-sysdeps-cygwin.patch
+	2.24.0-no-undefined.patch
+	2.24.0-examples-ipv6.patch
+"
+
+PKG_NAMES="${PN} ${PN}_7 ${PN}-devel"
+libgtop2_0_7_CONTENTS="usr/bin/*-2.0-7.dll usr/share/doc/ usr/share/locale/"
+libgtop2_0_devel_CONTENTS='usr/include/ usr/lib/ usr/share/gtk-doc/ usr/share/info/'
+
+DIFF_EXCLUDES="doc"

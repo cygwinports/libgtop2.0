@@ -1,5 +1,6 @@
 category: Gnome
-requires: cygwin glib2 libXau6 libintl8
+requires: cygwin libglib2.0_0 libintl8 libXau6
+external-source: libgtop2.0
 sdesc: "GNOME system monitoring library (runtime)"
 ldesc: "GNOME cross-platform system monitoring library
 

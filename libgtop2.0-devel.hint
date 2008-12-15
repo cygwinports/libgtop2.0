@@ -1,6 +1,6 @@
 category: Gnome
-requires: cygwin glib2-devel libXau-devel gettext
-external-source: libgtop2
+requires: cygwin libgtop2.0_7 libglib2.0-devel gettext libXau-devel
+external-source: libgtop2.0
 sdesc: "GNOME system monitoring library (development)"
 ldesc: "GNOME cross-platform system monitoring library
 

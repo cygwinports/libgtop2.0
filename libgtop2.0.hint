@@ -1,7 +1,5 @@
-category: Gnome Doc
-requires: cygwin glib2-doc
-external-source: libgtop2
-sdesc: "GNOME system monitoring library (documentation)"
+category: Gnome
+sdesc: "GNOME system monitoring library (sources)"
 ldesc: "GNOME cross-platform system monitoring library
 
 PLEASE NOTE:
