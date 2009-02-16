@@ -2,7 +2,7 @@ ORIG_PN="libgtop"
 inherit gnome2
 
 PATCH_URI="
-	2.24.0-sysdeps-cygwin.patch
+	2.24.4-sysdeps-cygwin.patch
 	2.24.0-no-undefined.patch
 	2.24.0-examples-ipv6.patch
 "

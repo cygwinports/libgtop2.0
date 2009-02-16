@@ -1,6 +1,6 @@
---- origsrc/libgtop-2.24.0/configure.in	2008-09-22 02:31:38.000000000 -0500
-+++ src/libgtop-2.24.0/configure.in	2008-12-15 13:55:50.634500000 -0600
-@@ -352,7 +352,7 @@
+--- origsrc/libgtop-2.24.4/configure.in	2009-02-16 02:06:00.421875000 -0600
++++ src/libgtop-2.24.4/configure.in	2009-02-16 00:34:57.000000000 -0600
+@@ -352,7 +352,7 @@ AC_SUBST(LIBGTOP_SERVER)
  
  if test x$libgtop_need_server = xyes ; then
     sysdeps_suid_lib="\$(top_builddir)/sysdeps/\$(sysdeps_dir)/libgtop_sysdeps_suid-2.0.la"
@@ -9,7 +9,7 @@
  else
     sysdeps_suid_lib=
     server_programs=
-@@ -381,6 +381,7 @@
+@@ -381,6 +381,7 @@ sysdeps/solaris/Makefile
  sysdeps/aix/Makefile
  sysdeps/bsd/Makefile
  sysdeps/darwin/Makefile
@@ -17,11 +17,11 @@
  src/Makefile
  src/daemon/Makefile
  lib/Makefile
---- origsrc/libgtop-2.24.0/libgtop-sysdeps.m4	2008-08-18 10:23:36.000000000 -0500
-+++ src/libgtop-2.24.0/libgtop-sysdeps.m4	2008-12-15 14:20:59.540750000 -0600
-@@ -103,6 +103,12 @@
+--- origsrc/libgtop-2.24.4/libgtop-sysdeps.m4	2009-02-16 02:06:00.421875000 -0600
++++ src/libgtop-2.24.4/libgtop-sysdeps.m4	2009-02-16 00:34:57.000000000 -0600
+@@ -103,6 +103,12 @@ AC_DEFUN([GNOME_LIBGTOP_SYSDEPS],[
  	  libgtop_have_sysinfo=yes
- 	  libgtop_postinstall='chgrp kmem $(bindir)/libgtop_server && chmod g+s $(bindir)/libgtop_server2'
+ 	  libgtop_postinstall='chgrp kmem $(bindir)/libgtop_server2 && chmod g+s $(bindir)/libgtop_server2'
  	  ;;
 +	cygwin*)
 +	  libgtop_sysdeps_dir=cygwin
@@ -32,16 +32,16 @@
  	*)
  	  if test x$hacker_mode = xyes ; then
  	    case "$host_os" in
---- origsrc/libgtop-2.24.0/sysdeps/Makefile.am	2008-05-23 17:13:24.000000000 -0500
-+++ src/libgtop-2.24.0/sysdeps/Makefile.am	2008-12-15 13:45:09.962625000 -0600
+--- origsrc/libgtop-2.24.4/sysdeps/Makefile.am	2009-02-16 02:06:00.421875000 -0600
++++ src/libgtop-2.24.4/sysdeps/Makefile.am	2009-02-16 00:34:57.000000000 -0600
 @@ -2,4 +2,4 @@
  SUBDIRS			= common @sysdeps_dir@
  
  DIST_SUBDIRS		= bsd common linux osf1 \
 -			  stub stub_suid sun4 freebsd solaris aix darwin
 +			  stub stub_suid sun4 freebsd solaris aix darwin cygwin
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/Makefile.am	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/Makefile.am	2008-12-15 15:08:38.478250000 -0600
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/Makefile.am	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/Makefile.am	2009-02-16 00:34:57.000000000 -0600
 @@ -0,0 +1,18 @@
 +INCLUDES			= @INCLUDES@
 +
@@ -61,11 +61,9 @@
 +libgtopincludedir		= $(includedir)/libgtop-2.0
 +
 +noinst_HEADERS			= glibtop_private.h
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/close.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/close.c	2008-12-15 13:55:50.665750000 -0600
-@@ -0,0 +1,31 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/close.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/close.c	2009-02-16 00:35:36.843750000 -0600
+@@ -0,0 +1,29 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -95,11 +93,9 @@
 +void
 +glibtop_close_s (glibtop *server)
 +{ }
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/cpu.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/cpu.c	2008-12-15 14:30:01.868875000 -0600
-@@ -0,0 +1,109 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/cpu.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/cpu.c	2009-02-16 00:40:56.937500000 -0600
+@@ -0,0 +1,103 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -158,11 +154,9 @@
 +	char buffer [BUFSIZ], *p;
 +	int i;
 +
-+	glibtop_init_s (&server, GLIBTOP_SYSDEPS_CPU, 0);
-+
 +	memset (buf, 0, sizeof (glibtop_cpu));
 +
-+	file_to_buffer(server, buffer, FILENAME);
++	file_to_buffer(server, buffer, sizeof buffer, FILENAME);
 +
 +	/*
 +	 * GLOBAL
@@ -200,75 +194,14 @@
 +			+ buf->xcpu_nice [i] \
 +			+ buf->xcpu_sys  [i] \
 +			+ buf->xcpu_idle [i];
-+
 +	}
 +
 +	if(server->ncpu) /* ok, that's a real SMP */
 +		buf->flags |= _glibtop_sysdeps_cpu_smp;
-+
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/fsusage.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/fsusage.c	2008-12-15 13:55:50.681375000 -0600
-@@ -0,0 +1,54 @@
-+#include <config.h>
-+#include <glibtop.h>
-+#include <glibtop/error.h>
-+#include <glibtop/fsusage.h>
-+
-+#include <glibtop_suid.h>
-+
-+#include <glib.h>
-+
-+#include <unistd.h>
-+#include <sys/param.h>
-+#if defined (HAVE_SYS_STATVFS_H)
-+#include <sys/statvfs.h>
-+#else
-+#include <sys/mount.h>
-+#endif
-+
-+#include <stdio.h>
-+#include <string.h>
-+#include <stdlib.h>
-+
-+void
-+G_GNUC_INTERNAL
-+_glibtop_freebsd_get_fsusage_read_write(glibtop *server,
-+				      glibtop_fsusage *buf,
-+				      const char *path);
-+
-+void G_GNUC_INTERNAL
-+_glibtop_freebsd_get_fsusage_read_write(glibtop *server,
-+				      glibtop_fsusage *buf,
-+				      const char *path)
-+{
-+	int result;
-+#if defined (STAT_STATVFS)
-+	struct statvfs sfs;
-+#else
-+	struct statfs sfs;
-+#endif
-+
-+#if defined (STAT_STATVFS)
-+	result = statvfs (path, &sfs);
-+#else
-+	result = statfs (path, &sfs);
-+#endif
-+
-+	if (result == -1) {
-+		return;
-+	}
-+
-+	buf->read = sfs.f_syncreads + sfs.f_asyncreads;
-+	buf->write = sfs.f_syncwrites + sfs.f_asyncwrites;
-+
-+	buf->flags |= (1 << GLIBTOP_FSUSAGE_READ) | (1 << GLIBTOP_FSUSAGE_WRITE);
-+}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/glibtop_machine.h	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/glibtop_machine.h	2008-12-15 13:55:50.697000000 -0600
-@@ -0,0 +1,46 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/glibtop_machine.h	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/glibtop_machine.h	2009-02-16 00:35:36.875000000 -0600
+@@ -0,0 +1,44 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -313,9 +246,9 @@
 +G_END_DECLS
 +
 +#endif
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/glibtop_private.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/glibtop_private.c	2008-12-15 14:57:42.743875000 -0600
-@@ -0,0 +1,180 @@
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/glibtop_private.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/glibtop_private.c	2009-02-16 00:45:59.671875000 -0600
+@@ -0,0 +1,221 @@
 +#include <config.h>
 +#include <glibtop.h>
 +#include <glibtop/error.h>
@@ -335,21 +268,31 @@
 +unsigned long long
 +get_scaled(const char *buffer, const char *key)
 +{
-+	const char    *ptr;
++	const char    *ptr = buffer;
 +	char	      *next;
-+	unsigned long long value = 0;
++	unsigned long long value;
 +
-+	if (G_LIKELY((ptr = strstr(buffer, key))))
-+	{
-+		ptr += strlen(key);
-+		value = strtoull(ptr, &next, 0);
-+		if (strchr(next, 'k'))
++	if (key) {
++		if (G_LIKELY((ptr = strstr(buffer, key))))
++			ptr += strlen(key);
++		else {
++			g_warning("Could not read key '%s' in buffer '%s'",
++				  key, buffer);
++			return 0;
++		}
++	}
++
++	value = strtoull(ptr, &next, 0);
++
++	for ( ; *next; ++next) {
++		if (*next == 'k') {
 +			value *= 1024;
-+		else if (strchr(next, 'M'))
++			break;
++		} else if (*next == 'M') {
 +			value *= 1024 * 1024;
-+	} else
-+		g_warning("Could not read key '%s' in buffer '%s'",
-+			  key, buffer);
++			break;
++		}
++	}
 +
 +	return value;
 +}
@@ -375,12 +318,19 @@
 +	TRY_FILE_TO_BUFFER_READ = -2
 +};
 +
-+int try_file_to_buffer(char *buffer, const char *format, ...)
++/*
++ * Doesn't handle bufsiz == 0
++ */
++int try_file_to_buffer(char *buffer, size_t bufsiz, const char *format, ...)
 +{
 +	char path[4096];
 +	int fd;
-+	ssize_t len;
++	size_t len = 0;
++	ssize_t nread = 0;
 +	va_list pa;
++
++	if (G_UNLIKELY(bufsiz <= sizeof(char*)))
++	  g_warning("Huhu, bufsiz of %lu looks bad", (gulong)bufsiz);
 +
 +	va_start(pa, format);
 +
@@ -389,15 +339,31 @@
 +
 +	va_end(pa);
 +
++	bufsiz--; /* reserve 1 for trailing NUL */
 +	buffer [0] = '\0';
 +
 +	if((fd = open (path, O_RDONLY)) < 0)
 +		return TRY_FILE_TO_BUFFER_OPEN;
 +
-+	len = read (fd, buffer, BUFSIZ-1);
++	while (len < bufsiz) {
++		nread = read (fd, buffer + len, bufsiz - len);
++
++		if (G_UNLIKELY(nread < 0)) {
++			if (errno == EINTR)
++				continue;
++			else
++				break;
++		}
++
++		len += nread;
++
++		if (nread == 0)
++			break;
++	}
++
 +	close (fd);
 +
-+	if (len < 0)
++	if (nread < 0)
 +		return TRY_FILE_TO_BUFFER_READ;
 +
 +	buffer [len] = '\0';
@@ -407,9 +373,9 @@
 +
 +
 +void
-+file_to_buffer(glibtop *server, char *buffer, const char *filename)
++file_to_buffer(glibtop *server, char *buffer, size_t bufsiz, const char *filename)
 +{
-+	switch(try_file_to_buffer(buffer, filename))
++	switch(try_file_to_buffer(buffer, bufsiz, filename))
 +	{
 +	case TRY_FILE_TO_BUFFER_OPEN:
 +		glibtop_error_io_r (server, "open (%s)", filename);
@@ -424,20 +390,27 @@
 +static unsigned long
 +read_boot_time(glibtop *server)
 +{
-+	char buffer[BUFSIZ];
-+	char *btime;
++	char* line = NULL;
++	size_t size = 0;
++	FILE* stat;
++	unsigned long btime = 0;
 +
-+	file_to_buffer(server, buffer, "/proc/stat");
-+
-+	btime = strstr(buffer, "btime");
-+
-+	if (!btime) {
-+		glibtop_warn_io_r(server, "cannot find btime in /proc/stat");
-+		return 0UL;
++	if (!(stat = fopen("/proc/stat", "r"))) {
++		glibtop_error_io_r(server, "fopen(\"/proc/stat\")");
++		goto out;
 +	}
 +
-+	btime = skip_token(btime);
-+	return strtoul(btime, NULL, 10);
++	while (getline(&line, &size, stat) != -1) {
++		if (!strncmp(line, "btime", 5)) {
++			btime = strtoul(skip_token(line), NULL, 10);
++			break;
++		}
++	}
++
++	free(line);
++	fclose(stat);
++out:
++	return btime;
 +}
 +
 +
@@ -481,8 +454,9 @@
 +	return g_str_has_prefix(line, start);
 +}
 +
-+gboolean
-+safe_readlink(const char *path, char *buf, size_t bufsiz)
++
++
++gboolean safe_readlink(const char *path, char *buf, size_t bufsiz)
 +{
 +	ssize_t ret;
 +
@@ -496,9 +470,9 @@
 +	buf[ret] = '\0';
 +	return TRUE;
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/glibtop_private.h	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/glibtop_private.h	2008-12-15 14:58:01.103250000 -0600
-@@ -0,0 +1,148 @@
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/glibtop_private.h	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/glibtop_private.h	2009-02-16 00:46:56.734375000 -0600
+@@ -0,0 +1,153 @@
 +/* Copyright (C) 2004 Benoît Dejean
 +   This file is part of LibGTop 2.0.
 +
@@ -532,6 +506,8 @@
 +
 +G_BEGIN_DECLS
 +
++
++
 +static inline char*
 +next_token(const char *p)
 +{
@@ -540,7 +516,7 @@
 +}
 +
 +char *
-+skip_token (const char *p) G_GNUC_INTERNAL;
++skip_token (const char *p);
 +
 +static inline char *
 +skip_multiple_token (const char *p, size_t count)
@@ -559,18 +535,22 @@
 +	return (char *) (*p ? p+1 : p);
 +}
 +
-+
++/*
++ * Smart strtoul which handles binary suffixes
++ * e.g: get_scaled("Size: 32 kB", "Size:") == 32768
++ * key can be NULL if there's not prefix to strip (or prefix size is known
++ */
 +unsigned long long
-+get_scaled(const char *buffer, const char *key) G_GNUC_INTERNAL;
++get_scaled(const char *buffer, const char *key);
 +
 +
 +/* aborts on error */
-+void G_GNUC_INTERNAL
-+file_to_buffer(glibtop *server, char *buffer, const char *filename);
++void
++file_to_buffer(glibtop *server, char *buffer, size_t bufsiz, const char *filename);
 +
 +/* return < 0 on error, otherwise 0 on success */
-+int G_GNUC_INTERNAL
-+try_file_to_buffer(char *buffer, const char *format, ...) G_GNUC_PRINTF(2, 3);
++int
++try_file_to_buffer(char *buffer, size_t bufsiz, const char *format, ...) G_GNUC_PRINTF(3, 4);
 +
 +
 +/* some inline functions that wrap proc path
@@ -578,27 +558,27 @@
 + */
 +
 +static inline int
-+proc_file_to_buffer (char *buffer, const char *fmt, pid_t pid)
++proc_file_to_buffer (char *buffer, size_t bufsiz, const char *fmt, pid_t pid)
 +{
-+	return try_file_to_buffer(buffer, fmt, pid);
++	return try_file_to_buffer(buffer, bufsiz, fmt, pid);
 +}
 +
 +static inline int
-+proc_stat_to_buffer (char *buffer, pid_t pid)
++proc_stat_to_buffer (char *buffer, size_t bufsiz, pid_t pid)
 +{
-+	return proc_file_to_buffer (buffer, "/proc/%d/stat", pid);
++	return proc_file_to_buffer(buffer, bufsiz, "/proc/%d/stat", pid);
 +}
 +
 +static inline int
-+proc_status_to_buffer (char *buffer, pid_t pid)
++proc_status_to_buffer (char *buffer, size_t bufsiz, pid_t pid)
 +{
-+	return proc_file_to_buffer (buffer, "/proc/%d/status", pid);
++	return proc_file_to_buffer(buffer, bufsiz, "/proc/%d/status", pid);
 +}
 +
 +static inline int
-+proc_statm_to_buffer (char *buffer, pid_t pid)
++proc_statm_to_buffer (char *buffer, size_t bufsiz, pid_t pid)
 +{
-+	return proc_file_to_buffer (buffer, "/proc/%d/statm", pid);
++	return proc_file_to_buffer(buffer, bufsiz, "/proc/%d/statm", pid);
 +}
 +
 +
@@ -613,15 +593,15 @@
 +
 +
 +unsigned long
-+get_boot_time(glibtop *server) G_GNUC_INTERNAL;
++get_boot_time(glibtop *server);
 +
 +
 +size_t
-+get_page_size(void) G_GNUC_INTERNAL;
++get_page_size(void);
 +
 +
 +gboolean
-+check_cpu_line(glibtop *server, const char *line, unsigned n) G_GNUC_INTERNAL;
++check_cpu_line(glibtop *server, const char *line, unsigned n);
 +
 +
 +static inline gboolean
@@ -640,18 +620,15 @@
 +}
 +
 +
-+gboolean
-+safe_readlink(const char *path, char *buf, size_t bufsiz);
++gboolean safe_readlink(const char *path, char *buf, size_t bufsiz);
 +
 +
 +G_END_DECLS
 +
 +#endif /* __CYGWIN__GLIBTOP_PRIVATE_H__ */
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/glibtop_server.h	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/glibtop_server.h	2008-12-15 15:04:32.415750000 -0600
-@@ -0,0 +1,52 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/glibtop_server.h	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/glibtop_server.h	2009-02-16 00:47:38.656250000 -0600
+@@ -0,0 +1,50 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -696,17 +673,15 @@
 +#define GLIBTOP_SUID_PROC_MAP		0
 +#define GLIBTOP_SUID_NETLOAD		0
 +#define GLIBTOP_SUID_NETLIST		0
++#define GLIBTOP_SUID_PROC_WD		0
++#define GLIBTOP_SUID_PROC_AFFINITY	0
 +#define GLIBTOP_SUID_PPP		0
 +#define GLIBTOP_SUID_PROC_FILE		0
-+#define GLIBTOP_SUID_PROC_WD        0
-+#define GLIBTOP_SUID_PROC_AFFINITY  0
 +
 +#endif /* __CYGWIN__GLIBTOP_SERVER_H__ */
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/loadavg.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/loadavg.c	2008-12-15 14:30:43.462625000 -0600
-@@ -0,0 +1,85 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/loadavg.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/loadavg.c	2009-02-16 00:35:36.890625000 -0600
+@@ -0,0 +1,81 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -750,7 +725,7 @@
 +	server->sysdeps.loadavg = _glibtop_sysdeps_loadavg;
 +}
 +
-+/* Provides load load average. */
++/* Provides load load averange. */
 +
 +#define FILENAME	"/proc/loadavg"
 +
@@ -759,11 +734,9 @@
 +{
 +	char buffer [BUFSIZ], *p, *old;
 +
-+	glibtop_init_s (&server, GLIBTOP_SYSDEPS_LOADAVG, 0);
-+
 +	memset (buf, 0, sizeof (glibtop_loadavg));
 +
-+	file_to_buffer(server, buffer, FILENAME);
++	file_to_buffer(server, buffer, sizeof buffer, FILENAME);
 +
 +	buf->loadavg [0] = g_ascii_strtod (buffer, &p);
 +	buf->loadavg [1] = g_ascii_strtod (p, &p);
@@ -790,11 +763,9 @@
 +
 +	buf->flags |= _glibtop_sysdeps_loadavg_tasks;
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/mem.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/mem.c	2008-12-15 14:30:49.712625000 -0600
-@@ -0,0 +1,68 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/mem.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/mem.c	2009-02-16 01:46:30.671875000 -0600
+@@ -0,0 +1,61 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -825,7 +796,6 @@
 +static const unsigned long _glibtop_sysdeps_mem =
 +(1L << GLIBTOP_MEM_TOTAL) + (1L << GLIBTOP_MEM_USED) +
 +(1L << GLIBTOP_MEM_FREE) + (1L << GLIBTOP_MEM_SHARED) +
-+(1L << GLIBTOP_MEM_BUFFER) + (1L << GLIBTOP_MEM_CACHED) +
 +(1L << GLIBTOP_MEM_USER);
 +
 +/* Init function. */
@@ -845,27 +815,190 @@
 +{
 +	char buffer [BUFSIZ];
 +
-+	glibtop_init_s (&server, GLIBTOP_SYSDEPS_MEM, 0);
-+
 +	memset(buf, 0, sizeof *buf);
 +
-+	file_to_buffer(server, buffer, FILENAME);
++	file_to_buffer(server, buffer, sizeof buffer, FILENAME);
 +
 +	buf->total  = get_scaled(buffer, "MemTotal:");
 +	buf->free   = get_scaled(buffer, "MemFree:");
 +	buf->used   = buf->total - buf->free;
 +	buf->shared = 0;
-+	buf->buffer = get_scaled(buffer, "Buffers:");
-+	buf->cached = get_scaled(buffer, "Cached:");
 +
-+	buf->user = buf->total - buf->free - buf->cached - buf->buffer;
++	buf->user = buf->total - buf->free;
 +	buf->flags = _glibtop_sysdeps_mem;
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/msg_limits.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/msg_limits.c	2008-12-15 14:30:54.665750000 -0600
-@@ -0,0 +1,63 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/mountlist.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/mountlist.c	2009-02-16 00:35:36.890625000 -0600
+@@ -0,0 +1,166 @@
++/* mountlist.c -- return a list of mounted filesystems
++   Copyright (C) 1991, 1992 Free Software Foundation, Inc.
 +
++   This file is a fork of sysdeps/common/mountlist.c.
++
++   This program is free software; you can redistribute it and/or modify
++   it under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2, or (at your option)
++   any later version.
++
++   This program is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this program; if not, write to the Free Software Foundation,
++   Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
++
++
++/*
++Local Variables:
++mode: C
++c-file-style: "gnu"
++End:
++*/
++
++#include <config.h>
++
++#include <stdio.h>
++#include <mntent.h>
++
++#include <glibtop.h>
++#include <glibtop/mountlist.h>
++#include <glibtop/error.h>
++
++
++/* IgnoreList */
++
++
++typedef struct
++{
++  GHashTable *table;
++} IgnoreList;
++
++
++static IgnoreList*
++ignore_list_new(void)
++{
++  IgnoreList* ig;
++  ig = g_new(IgnoreList, 1);
++  ig->table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
++  return ig;
++}
++
++
++static void
++ignore_list_delete(IgnoreList* ig)
++{
++  if (ig) {
++    g_hash_table_destroy(ig->table);
++    g_free(ig);
++  }
++}
++
++
++static void
++ignore_list_add(IgnoreList* ig, const char* fs)
++{
++  g_hash_table_insert(ig->table, g_strdup(fs), GINT_TO_POINTER(1));
++}
++
++
++static gboolean
++ignore_list_has(IgnoreList* ig, const char* fs)
++{
++  gpointer data;
++  data = g_hash_table_lookup(ig->table, fs);
++  return data != NULL;
++}
++
++
++/* ~IgnoreList */
++
++
++static gboolean
++ignore_fs(const char *fstype, IgnoreList** ig)
++{
++  if (!*ig) {
++    FILE* fs;
++    char line[128];
++
++    *ig = ignore_list_new();
++
++    if ((fs = fopen("/proc/filesystems", "r")) != NULL) {
++      while (fgets(line, sizeof line, fs)) {
++	if (!strncmp(line, "nodev", 5)) {
++	  char *type;
++	  type = g_strstrip(line + 5);
++	  ignore_list_add(*ig, type);
++	}
++      }
++      fclose(fs);
++    }
++  }
++
++  return ignore_list_has(*ig, fstype);
++}
++
++
++glibtop_mountentry *
++glibtop_get_mountlist_s(glibtop *server, glibtop_mountlist *buf, int all_fs)
++{
++  const struct mntent *mnt;
++  FILE *fp;
++  GArray* entries;
++  IgnoreList* ig = NULL;
++
++  glibtop_init_r(&server, 0, 0);
++  memset(buf, 0, sizeof(glibtop_mountlist));
++
++  /* wild guess, preallocate 8 entries
++     on a desktop, almost everyone has / and a tmpfs for udev
++     if all_fs, there are also proc, sys, fuse, binfmt, etc */
++  entries = g_array_sized_new(FALSE, FALSE, sizeof(glibtop_mountentry), 8);
++
++  if (!(fp = setmntent(MOUNTED, "r"))) {
++      glibtop_warn_io_r(server, "Could not open %s", MOUNTED);
++      goto out;
++    }
++
++  while ((mnt = getmntent(fp)))
++    {
++      glibtop_mountentry *me;
++      const char *devopt;
++      gsize len;
++
++      if (!all_fs && ignore_fs(mnt->mnt_type, &ig))
++	continue;
++
++      len = entries->len;
++      g_array_set_size(entries, len + 1);
++      me = &g_array_index(entries, glibtop_mountentry, len);
++
++      g_strlcpy(me->devname, mnt->mnt_fsname, sizeof me->devname);
++      g_strlcpy(me->mountdir, mnt->mnt_dir, sizeof me->mountdir);
++      g_strlcpy(me->type, mnt->mnt_type, sizeof me->type);
++      devopt = strstr(mnt->mnt_opts, "dev=");
++      me->dev = (devopt ? strtoull(devopt + sizeof "dev=", NULL, 0) : (dev_t)-1);
++    }
++
++    endmntent(fp);
++
++
++  out:
++    ignore_list_delete(ig);
++
++    buf->size = sizeof(glibtop_mountentry);
++    buf->number = entries->len;
++    buf->total = buf->number * buf->size;
++    buf->flags = (1 << GLIBTOP_MOUNTLIST_SIZE)
++    | (1 << GLIBTOP_MOUNTLIST_NUMBER)
++    | (1 << GLIBTOP_MOUNTLIST_TOTAL);
++
++  return (glibtop_mountentry*) g_array_free(entries, FALSE);
++}
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/msg_limits.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/msg_limits.c	2009-02-16 01:34:38.359375000 -0600
+@@ -0,0 +1,60 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -895,6 +1028,7 @@
 +#include <sys/msg.h>
 +
 +static const unsigned long _glibtop_sysdeps_msg_limits =
++(1L << GLIBTOP_IPC_MSGPOOL) + (1L << GLIBTOP_IPC_MSGMAP) +
 +(1L << GLIBTOP_IPC_MSGMAX) + (1L << GLIBTOP_IPC_MSGMNB) +
 +(1L << GLIBTOP_IPC_MSGMNI) + (1L << GLIBTOP_IPC_MSGSSZ) +
 +(1L << GLIBTOP_IPC_MSGTQL);
@@ -914,8 +1048,6 @@
 +{
 +	struct msginfo msginfo;
 +
-+	glibtop_init_s (&server, GLIBTOP_SYSDEPS_MSG_LIMITS, 0);
-+
 +	memset (buf, 0, sizeof (glibtop_msg_limits));
 +
 +	msgctl (0, IPC_INFO, (void*) &msginfo);
@@ -927,12 +1059,13 @@
 +	buf->msgtql = msginfo.msgtql;
 +	buf->flags = _glibtop_sysdeps_msg_limits;
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/netlist.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/netlist.c	2008-12-15 14:31:01.118875000 -0600
-@@ -0,0 +1,41 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/netlist.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/netlist.c	2009-02-16 01:49:33.921875000 -0600
+@@ -0,0 +1,46 @@
++/* Copyright (C) 1998-99 Martin Baulig
++   This file is part of LibGTop 1.0.
 +
-+/* This file is part of LibGTop 2.0.
++   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
 +
 +   LibGTop is free software; you can redistribute it and/or modify it
 +   under the terms of the GNU General Public License as published by
@@ -951,8 +1084,11 @@
 +*/
 +
 +#include <config.h>
-+#include <glibtop.h>
 +#include <glibtop/netlist.h>
++#include <glibtop/error.h>
++
++#include <stdio.h>
++
 +
 +static const unsigned long _glibtop_sysdeps_netlist = 0;
 +
@@ -964,18 +1100,17 @@
 +	server->sysdeps.netlist = _glibtop_sysdeps_netlist;
 +}
 +
++
 +char**
 +glibtop_get_netlist_s (glibtop *server, glibtop_netlist *buf)
 +{
 +	memset (buf, 0, sizeof (glibtop_netlist));
-+
 +	return NULL;
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/netload.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/netload.c	2008-12-15 16:20:24.009500000 -0600
-@@ -0,0 +1,128 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
 +
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/netload.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/netload.c	2009-02-16 00:52:14.562500000 -0600
+@@ -0,0 +1,44 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -998,115 +1133,31 @@
 +*/
 +
 +#include <config.h>
-+
 +#include <glibtop.h>
 +#include <glibtop/error.h>
 +#include <glibtop/netload.h>
 +
-+#include "glibtop_private.h"
-+
-+#include <errno.h>
-+#include <string.h>
-+
-+#include <sys/types.h>
-+#include <sys/socket.h>
-+#include <sys/ioctl.h>
-+
-+#include <cygwin/if.h>
-+#include <cygwin/in.h>
-+#include <cygwin/icmp.h>
-+#include <net/if.h>
-+#include <netinet/ip_icmp.h>
-+#include <netinet/in.h>
-+#include <netinet/ip.h>
-+#include <netinet/tcp.h>
-+#include <netinet/udp.h>
-+#include <net/if.h>
-+
-+
-+#ifdef HAVE_IFADDRS_H
-+/* needed for IPV6 support */
-+
-+#include <ifaddrs.h>
-+
-+#ifndef IN6_IS_ADDR_GLOBAL
-+#define IN6_IS_ADDR_GLOBAL(a) \
-+   (((((__const uint8_t *) (a))[0] & 0xff) == 0x3f   \
-+     || (((__const uint8_t *) (a))[0] & 0xff) == 0x20))
-+#endif
-+#endif /* HAVE_IFADDRS_H */
-+
-+
-+#define _GLIBTOP_IP_FW_ACCTIN	0x1000	/* Account incoming packets only. */
-+#define _GLIBTOP_IP_FW_ACCTOUT	0x2000	/* Account outgoing packets only. */
-+
-+static const unsigned long _glibtop_sysdeps_netload =
-+(1L << GLIBTOP_NETLOAD_ERRORS_IN) +
-+(1L << GLIBTOP_NETLOAD_ERRORS_OUT) +
-+(1L << GLIBTOP_NETLOAD_COLLISIONS);
-+
-+static const unsigned long _glibtop_sysdeps_netload_data =
-+(1L << GLIBTOP_NETLOAD_ADDRESS) +
-+(1L << GLIBTOP_NETLOAD_SUBNET) +
-+(1L << GLIBTOP_NETLOAD_MTU);
-+
-+static const unsigned long _glibtop_sysdeps_netload_bytes =
-+(1L << GLIBTOP_NETLOAD_BYTES_IN) +
-+(1L << GLIBTOP_NETLOAD_BYTES_OUT) +
-+(1L << GLIBTOP_NETLOAD_BYTES_TOTAL);
-+
-+static const unsigned long _glibtop_sysdeps_netload_packets =
-+(1L << GLIBTOP_NETLOAD_PACKETS_IN) +
-+(1L << GLIBTOP_NETLOAD_PACKETS_OUT) +
-+(1L << GLIBTOP_NETLOAD_PACKETS_TOTAL);
-+
-+static const unsigned long _glibtop_sysdeps_netload_total =
-+(1L << GLIBTOP_NETLOAD_PACKETS_TOTAL) +
-+(1L << GLIBTOP_NETLOAD_BYTES_TOTAL);
-+
-+static const unsigned long _glibtop_sysdeps_netload_in =
-+(1L << GLIBTOP_NETLOAD_PACKETS_TOTAL) +
-+(1L << GLIBTOP_NETLOAD_BYTES_TOTAL) +
-+(1L << GLIBTOP_NETLOAD_PACKETS_IN) +
-+(1L << GLIBTOP_NETLOAD_BYTES_IN);
-+
-+static const unsigned long _glibtop_sysdeps_netload_out =
-+(1L << GLIBTOP_NETLOAD_PACKETS_TOTAL) +
-+(1L << GLIBTOP_NETLOAD_BYTES_TOTAL) +
-+(1L << GLIBTOP_NETLOAD_PACKETS_OUT) +
-+(1L << GLIBTOP_NETLOAD_BYTES_OUT);
-+
-+static const unsigned long _glibtop_sysdeps_netload_6 =
-+(1L << GLIBTOP_NETLOAD_ADDRESS6) +
-+(1L << GLIBTOP_NETLOAD_PREFIX6) +
-+(1L << GLIBTOP_NETLOAD_SCOPE6);
++static const unsigned long _glibtop_sysdeps_netload = 0;
 +
 +/* Init function. */
 +
 +void
 +_glibtop_init_netload_s (glibtop *server)
 +{
-+    server->sysdeps.netload = _glibtop_sysdeps_netload |
-+	_glibtop_sysdeps_netload_data |
-+	_glibtop_sysdeps_netload_bytes |
-+	_glibtop_sysdeps_netload_packets;
++	server->sysdeps.netload = _glibtop_sysdeps_netload;
 +}
 +
-+
 +/* Provides network statistics. */
++
 +void
 +glibtop_get_netload_s (glibtop *server, glibtop_netload *buf,
 +		       const char *interface)
 +{
 +	memset (buf, 0, sizeof (glibtop_netload));
-+
-+	return NULL;
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/open.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/open.c	2008-12-15 14:31:09.384500000 -0600
-@@ -0,0 +1,70 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/open.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/open.c	2009-02-16 00:56:44.093750000 -0600
+@@ -0,0 +1,68 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -1151,7 +1202,7 @@
 +
 +	server->name = program_name;
 +
-+	file_to_buffer(server, buffer, FILENAME);
++	file_to_buffer(server, buffer, sizeof buffer, FILENAME);
 +
 +	p = skip_line(p); /* cpu */
 +
@@ -1169,17 +1220,15 @@
 +
 +	if (server->real_ncpu != server->ncpu) {
 +		glibtop_warn_r(server,
-+		       "This machine has %d CPUs, "
-+		       "%d are being monitored.",
-+		       server->real_ncpu + 1,
-+		       server->ncpu + 1);
++			       "This machine has %d CPUs, "
++			       "%d are being monitored.",
++			       server->real_ncpu + 1,
++			       server->ncpu + 1);
 +	}
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/ppp.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/ppp.c	2008-12-15 16:21:03.931375000 -0600
-@@ -0,0 +1,57 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/ppp.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/ppp.c	2009-02-16 00:57:02.281250000 -0600
+@@ -0,0 +1,43 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -1206,17 +1255,7 @@
 +#include <glibtop/error.h>
 +#include <glibtop/ppp.h>
 +
-+#include <sys/ioctl.h>
-+#include <sys/stat.h>
-+#include <fcntl.h>
-+
-+#include <ctype.h>
-+
-+#include <glib.h>
-+
-+static const unsigned long _glibtop_sysdeps_ppp =
-+(1L << GLIBTOP_PPP_STATE) + (1L << GLIBTOP_PPP_BYTES_IN) +
-+(1L << GLIBTOP_PPP_BYTES_OUT);
++static const unsigned long _glibtop_sysdeps_ppp = 0;
 +
 +/* Init function. */
 +
@@ -1232,13 +1271,11 @@
 +glibtop_get_ppp_s (glibtop *server, glibtop_ppp *buf, unsigned short device)
 +{
 +	memset (buf, 0, sizeof (glibtop_ppp));
-+	
-+	return NULL;
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/procaffinity.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/procaffinity.c	2008-12-15 16:21:51.322000000 -0600
-@@ -0,0 +1,45 @@
-+/* Copyright (C) 2007 Joe Marcus Clarke <marcus@FreeBSD.org>
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/procaffinity.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/procaffinity.c	2009-02-16 01:02:42.843750000 -0600
+@@ -0,0 +1,40 @@
++/* Copyright (C) 2007 Benoît Dejean
 +   This file is part of LibGTop 2.
 +
 +   LibGTop is free software; you can redistribute it and/or modify it
@@ -1261,16 +1298,12 @@
 +#include <glibtop/procaffinity.h>
 +#include <glibtop/error.h>
 +
-+#include <glibtop_private.h>
-+
-+#include <sys/param.h>
++static const unsigned long _glibtop_sysdeps_proc_affinity = 0;
 +
 +void
 +_glibtop_init_proc_affinity_s(glibtop *server)
 +{
-+  server->sysdeps.proc_affinity =
-+    (1 << GLIBTOP_PROC_AFFINITY_NUMBER) |
-+    (1 << GLIBTOP_PROC_AFFINITY_ALL);
++  server->sysdeps.proc_affinity = _glibtop_sysdeps_proc_affinity;
 +
 +}
 +
@@ -1278,16 +1311,13 @@
 +guint16 *
 +glibtop_get_proc_affinity_s(glibtop *server, glibtop_proc_affinity *buf, pid_t pid)
 +{
-+  memset(buf, 0, sizeof (glibtop_proc_affinity));
-+
++  memset(buf, 0, sizeof *buf);
 +  return NULL;
 +}
 +
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/procargs.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/procargs.c	2008-12-15 14:31:23.775125000 -0600
-@@ -0,0 +1,74 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/procargs.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/procargs.c	2009-02-16 00:35:36.921875000 -0600
+@@ -0,0 +1,70 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -1337,8 +1367,6 @@
 +	gsize length;
 +	GError *error = NULL;
 +
-+	glibtop_init_s (&server, GLIBTOP_SYSDEPS_PROC_ARGS, 0);
-+
 +	memset (buf, 0, sizeof (glibtop_proc_args));
 +
 +	sprintf (filename, "/proc/%d/cmdline", pid);
@@ -1360,11 +1388,9 @@
 +
 +	return args;
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/prockernel.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/prockernel.c	2008-12-15 14:31:29.165750000 -0600
-@@ -0,0 +1,80 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/prockernel.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/prockernel.c	2009-02-16 01:03:23.531250000 -0600
+@@ -0,0 +1,43 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -1388,16 +1414,9 @@
 +
 +#include <config.h>
 +#include <glibtop.h>
-+#include <glibtop/error.h>
 +#include <glibtop/prockernel.h>
 +
-+#include "glibtop_private.h"
-+
-+static const unsigned long _glibtop_sysdeps_proc_kernel =
-+(1L << GLIBTOP_PROC_KERNEL_K_FLAGS) + (1L << GLIBTOP_PROC_KERNEL_MIN_FLT) +
-+(1L << GLIBTOP_PROC_KERNEL_MAJ_FLT) + (1L << GLIBTOP_PROC_KERNEL_CMIN_FLT) +
-+(1L << GLIBTOP_PROC_KERNEL_CMAJ_FLT) + (1L << GLIBTOP_PROC_KERNEL_KSTK_ESP) +
-+(1L << GLIBTOP_PROC_KERNEL_KSTK_EIP) + (1L << GLIBTOP_PROC_KERNEL_WCHAN);
++static const unsigned long _glibtop_sysdeps_proc_kernel = 0;
 +
 +/* Init function. */
 +
@@ -1410,44 +1429,14 @@
 +/* Provides detailed information about a process. */
 +
 +void
-+glibtop_get_proc_kernel_s (glibtop *server, glibtop_proc_kernel *buf, pid_t pid)
++glibtop_get_proc_kernel_s (glibtop *server, glibtop_proc_kernel *buf,
++			   pid_t pid)
 +{
-+	char buffer [BUFSIZ], *p;
-+
-+	glibtop_init_s (&server, GLIBTOP_SYSDEPS_PROC_KERNEL, 0);
-+
 +	memset (buf, 0, sizeof (glibtop_proc_kernel));
-+
-+	if (proc_stat_to_buffer (buffer, pid))
-+		return;
-+
-+	p = proc_stat_after_cmd (buffer);
-+	if (!p) return;
-+
-+	p = skip_multiple_token (p, 6);
-+
-+	buf->k_flags   = strtoull (p, &p, 0);
-+	buf->min_flt   = strtoull (p, &p, 0);
-+	buf->cmin_flt  = strtoull (p, &p, 0);
-+	buf->maj_flt   = strtoull (p, &p, 0);
-+	buf->cmaj_flt  = strtoull (p, &p, 0);
-+
-+	p = skip_multiple_token (p, 15);
-+
-+	buf->kstk_esp = strtoull (p, &p, 0);
-+	buf->kstk_eip = strtoull (p, &p, 0);
-+
-+	p = skip_multiple_token (p, 4);
-+
-+	buf->nwchan = strtoull (p, &p, 0);
-+
-+	buf->flags = _glibtop_sysdeps_proc_kernel;
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/proclist.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/proclist.c	2008-12-15 14:29:52.134500000 -0600
-@@ -0,0 +1,170 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/proclist.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/proclist.c	2009-02-16 01:05:44.656250000 -0600
+@@ -0,0 +1,171 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -1505,7 +1494,7 @@
 + *
 + * On error, NULL is returned and buf->flags is zero. */
 +
-+pid_t *
++pid_t*
 +glibtop_get_proclist_s (glibtop *server, glibtop_proclist *buf,
 +			gint64 which, gint64 arg)
 +{
@@ -1516,21 +1505,24 @@
 +	glibtop_proc_state procstate;
 +	struct stat statb;
 +
-+	glibtop_init_s (&server, GLIBTOP_SYSDEPS_PROCLIST, 0);
-+
 +	memset (buf, 0, sizeof (glibtop_proclist));
 +
 +	proc = opendir ("/proc");
 +	if (!proc) return NULL;
 +
-+	if(stat("/proc", &statb)) return NULL;
++	if(fstat(dirfd(proc), &statb) != 0) return NULL;
 +
-+	pids = g_array_sized_new(FALSE, FALSE, sizeof(unsigned), statb.st_nlink);
++	pids = g_array_sized_new(FALSE, FALSE, sizeof(pid_t), statb.st_nlink);
 +
 +	/* read every every entry in /proc */
 +
 +	while((entry = readdir (proc))) {
-+		unsigned pid;
++		pid_t pid;
++
++#ifdef DT_DIR
++		if (entry->d_type != DT_DIR)
++			continue;
++#endif
 +
 +		if (!(pid = strtoul(entry->d_name, NULL, 10)))
 +			continue;
@@ -1539,7 +1531,7 @@
 +		case GLIBTOP_KERN_PROC_ALL:
 +			break;
 +		case GLIBTOP_KERN_PROC_PID:
-+			if ((unsigned) arg != pid)
++			if ((pid_t) arg != pid)
 +				continue;
 +			break;
 +		case GLIBTOP_KERN_PROC_UID:
@@ -1547,7 +1539,7 @@
 +			char path[32];
 +			struct stat path_stat;
 +
-+			snprintf(path, sizeof path, "/proc/%u", pid);
++			snprintf(path, sizeof path, "/proc/%u", (unsigned)pid);
 +
 +			if (stat(path, &path_stat))
 +				continue;
@@ -1610,17 +1602,15 @@
 +	closedir (proc);
 +
 +	buf->flags = _glibtop_sysdeps_proclist;
-+	buf->size = sizeof (unsigned);
++	buf->size = sizeof(pid_t);
 +	buf->number = pids->len;
 +	buf->total = buf->number * buf->size;
 +
-+	return (pid_t*) g_array_free(pids, FALSE);
++	return (pid_t*)g_array_free(pids, FALSE);
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/procmap.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/procmap.c	2008-12-15 14:31:37.650125000 -0600
-@@ -0,0 +1,226 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/procmap.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/procmap.c	2009-02-16 01:41:54.468750000 -0600
+@@ -0,0 +1,196 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -1653,14 +1643,12 @@
 +
 +#include "glibtop_private.h"
 +
++#define MKDEV(ma,mi)    (((ma) << 20) | (mi))
 +
 +#define  MAPS_FILE "/proc/%u/maps"
-+#define SMAPS_FILE "/proc/%u/smaps"
 +
 +
-+#define PROC_MAPS_FORMAT ((sizeof(void*) == 8) \
-+? "%16lx-%16lx %4c %16lx %02hx:%02hx %lu%*[ ]%[^\n]\n" \
-+: "%08lx-%08lx %4c %08lx %02hx:%02hx %lu%*[ ]%[^\n]\n")
++#define PROC_MAPS_FORMAT "%16" G_GINT64_MODIFIER "x-%16" G_GINT64_MODIFIER "x %4c %16" G_GINT64_MODIFIER "x %02hx:%02hx %" G_GINT64_MODIFIER "u%*[ ]%n"
 +
 +
 +static const unsigned long _glibtop_sysdeps_proc_map =
@@ -1670,12 +1658,8 @@
 +static const unsigned long _glibtop_sysdeps_map_entry =
 +(1L << GLIBTOP_MAP_ENTRY_START) + (1L << GLIBTOP_MAP_ENTRY_END) +
 +(1L << GLIBTOP_MAP_ENTRY_OFFSET) + (1L << GLIBTOP_MAP_ENTRY_PERM) +
-+(1L << GLIBTOP_MAP_ENTRY_INODE) + (1L << GLIBTOP_MAP_ENTRY_FILENAME);
-+
-+static const unsigned long _glibtop_sysdeps_map_entry_smaps =
-+(1UL << GLIBTOP_MAP_ENTRY_SIZE) + (1UL << GLIBTOP_MAP_ENTRY_RSS) +
-+(1UL << GLIBTOP_MAP_ENTRY_SHARED_DIRTY) + (1UL << GLIBTOP_MAP_ENTRY_SHARED_CLEAN) +
-+(1UL << GLIBTOP_MAP_ENTRY_PRIVATE_DIRTY) + (1UL << GLIBTOP_MAP_ENTRY_PRIVATE_CLEAN);
++(1L << GLIBTOP_MAP_ENTRY_INODE) + (1L << GLIBTOP_MAP_ENTRY_DEVICE) +
++(1L << GLIBTOP_MAP_ENTRY_FILENAME);
 +
 +
 +/* Init function. */
@@ -1689,52 +1673,36 @@
 +/* Provides detailed information about a process. */
 +
 +
-+static void
-+add_smaps(glibtop *server, FILE *smaps, glibtop_map_entry *entry)
++
++struct smap_value {
++	char name[16];
++	size_t name_len;
++	ptrdiff_t offset;
++};
++
++static int
++compare(const void* a_key, const void* a_smap)
 +{
-+#define SMAP_OFFSET(MEMBER) offsetof(glibtop_map_entry, MEMBER)
-+
-+	struct smap_value {
-+		const char *name;
-+		ptrdiff_t offset;
-+	};
-+
-+	const struct smap_value values[] = {
-+		{ "Size:",		SMAP_OFFSET(size) },
-+		{ "Rss:",		SMAP_OFFSET(rss) },
-+		{ "Shared_Clean:",	SMAP_OFFSET(shared_clean) },
-+		{ "Shared_Dirty:",	SMAP_OFFSET(shared_dirty) },
-+		{ "Private_Clean:",	SMAP_OFFSET(private_clean) },
-+		{ "Private_Dirty:",	SMAP_OFFSET(private_dirty) }
-+	};
-+
-+	size_t i;
-+
-+	for (i = 0; i < G_N_ELEMENTS(values); ++i) {
-+		char line[80];
-+		char *offset;
-+		guint64 *value;
-+
-+		if (!fgets(line, sizeof line, smaps)) {
-+			glibtop_warn_io_r(server,
-+					  "Could not read smaps value %s",
-+					  values[i].name);
-+			return;
-+		}
-+
-+		offset = (void*) entry;
-+		offset += values[i].offset;
-+		value = (void*) offset;
-+
-+		*value = get_scaled(line, values[i].name);
-+	}
-+
-+	entry->flags |= _glibtop_sysdeps_map_entry_smaps;
-+
-+#undef SMAP_OFFSET
++	const char* key = a_key;
++	const struct smap_value* smap = a_smap;
++	return strncmp(key, smap->name, smap->name_len);
 +}
 +
 +
++static gboolean
++is_smap_value(const char* s)
++{
++	for ( ; *s; ++s) {
++
++		if (isspace(*s))
++			return FALSE;
++
++		if (*s == ':')
++			return TRUE;
++	}
++
++	return FALSE;
++}
 +
 +
 +glibtop_map_entry *
@@ -1752,9 +1720,8 @@
 +					       100);
 +	FILE *maps;
 +	const char *filename;
-+	gboolean has_smaps;
-+
-+	glibtop_init_s (&server, GLIBTOP_SYSDEPS_PROC_MAP, 0);
++	char *line = NULL;
++	size_t line_size = 0;
 +
 +	memset (buf, 0, sizeof (glibtop_proc_map));
 +
@@ -1768,34 +1735,32 @@
 +
 +	while(TRUE)
 +	{
-+		char line[1024];
-+
-+		unsigned long perm = 0;
-+		int rv;
++		unsigned long perm;
 +		guint len;
++		int line_end;
 +
 +		unsigned short dev_major, dev_minor;
-+		unsigned long start, end, offset, inode;
++		guint64 start, end, offset, inode;
 +		char flags[4];
-+		char filename [GLIBTOP_MAP_FILENAME_LEN+1];
++		char *filename;
 +
 +		glibtop_map_entry *entry;
 +
-+		if (!fgets(line, sizeof line, maps))
++		if (getline(&line, &line_size, maps) == -1)
 +			break;
 +
-+		/* 8 arguments */
-+		rv = sscanf(line, PROC_MAPS_FORMAT,
-+			    &start, &end, flags, &offset,
-+			    &dev_major, &dev_minor, &inode, filename);
++	new_entry_line:
 +
-+		if(rv == EOF || rv < 7)
-+		  break;
++		if (sscanf(line, PROC_MAPS_FORMAT,
++			   &start, &end, flags, &offset,
++			   &dev_major, &dev_minor, &inode, &line_end) != 7)
++			continue;
 +
-+		if(rv == 7) /* no filename */
-+		  filename[0] = '\0';
++		filename = line + line_end;
++		g_strstrip(filename);
 +
 +		/* Compute access permissions. */
++		perm = 0;
 +
 +		if (flags [0] == 'r')
 +			perm |= GLIBTOP_MAP_PERM_READ;
@@ -1820,21 +1785,18 @@
 +		entry = &g_array_index(entry_list, glibtop_map_entry, len);
 +
 +		entry->flags = _glibtop_sysdeps_map_entry;
-+		entry->start = (guint64) start;
-+		entry->end = (guint64) end;
-+		entry->offset = (guint64) offset;
-+		entry->perm = (guint64) perm;
-+#ifdef MKDEV
-+		entry->device = (guint64) MKDEV(dev_major, dev_minor);
-+#endif
-+		entry->inode = (guint64) inode;
++		entry->start = start;
++		entry->end = end;
++		entry->offset = offset;
++		entry->perm = perm;
++		entry->device = MKDEV(dev_major, dev_minor);
++		entry->inode = inode;
 +		g_strlcpy(entry->filename, filename, sizeof entry->filename);
-+
-+		if (has_smaps)
-+			add_smaps(server, maps, entry);
-+
 +	}
 +
++eof:
++
++	free(line);
 +	fclose (maps);
 +
 +	buf->flags = _glibtop_sysdeps_proc_map;
@@ -1845,11 +1807,9 @@
 +
 +	return (glibtop_map_entry*) g_array_free(entry_list, FALSE);
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/procmem.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/procmem.c	2008-12-15 14:31:43.728250000 -0600
-@@ -0,0 +1,88 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/procmem.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/procmem.c	2009-02-16 01:10:17.796875000 -0600
+@@ -0,0 +1,69 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -1879,10 +1839,6 @@
 +#include "glibtop_private.h"
 +
 +static const unsigned long _glibtop_sysdeps_proc_mem =
-+(1L << GLIBTOP_PROC_MEM_VSIZE) + (1L << GLIBTOP_PROC_MEM_RSS) +
-+(1L << GLIBTOP_PROC_MEM_RSS_RLIM);
-+
-+static const unsigned long _glibtop_sysdeps_proc_mem_statm =
 +(1L << GLIBTOP_PROC_MEM_SIZE) + (1L << GLIBTOP_PROC_MEM_RESIDENT) +
 +(1L << GLIBTOP_PROC_MEM_SHARE);
 +
@@ -1892,8 +1848,7 @@
 +void
 +_glibtop_init_proc_mem_s (glibtop *server)
 +{
-+	server->sysdeps.proc_mem = _glibtop_sysdeps_proc_mem |
-+	  _glibtop_sysdeps_proc_mem_statm;
++	server->sysdeps.proc_mem = _glibtop_sysdeps_proc_mem;
 +}
 +
 +/* Provides detailed information about a process. */
@@ -1904,25 +1859,9 @@
 +	char buffer [BUFSIZ], *p;
 +	const size_t pagesize = get_page_size();
 +
-+	glibtop_init_s (&server, GLIBTOP_SYSDEPS_MEM, 0);
-+
 +	memset (buf, 0, sizeof (glibtop_proc_mem));
 +
-+	if (proc_stat_to_buffer (buffer, pid))
-+		return;
-+
-+	p = proc_stat_after_cmd (buffer);
-+	if (!p) return;
-+
-+	p = skip_multiple_token (p, 20);
-+
-+	buf->vsize    = strtoull (p, &p, 0);
-+	buf->rss      = strtoull (p, &p, 0);
-+	buf->rss_rlim = strtoull (p, &p, 0);
-+
-+	buf->flags = _glibtop_sysdeps_proc_mem;
-+
-+	if (proc_statm_to_buffer (buffer, pid))
++	if (proc_statm_to_buffer(buffer, sizeof buffer, pid))
 +		return;
 +
 +	buf->size     = strtoull (buffer, &p, 0);
@@ -1932,20 +1871,22 @@
 +	buf->size     *= pagesize;
 +	buf->resident *= pagesize;
 +	buf->share    *= pagesize;
-+	buf->rss      *= pagesize;
 +
-+	buf->flags |= _glibtop_sysdeps_proc_mem_statm;
++	/* dummy values */
++	buf->vsize = buf->size;
++	buf->rss_rlim = ~0;
++
++	buf->flags |= _glibtop_sysdeps_proc_mem;
++	buf->rss = buf->resident;
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/procopenfiles.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/procopenfiles.c	2008-12-15 14:31:49.478250000 -0600
-@@ -0,0 +1,51 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/procopenfiles.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/procopenfiles.c	2009-02-16 01:38:27.171875000 -0600
+@@ -0,0 +1,328 @@
 +/* Copyright (C) 1998-99 Martin Baulig
-+   Copyright (C) 2004 Nicol�s Lichtmaier
++   Copyright (C) 2004 Nicolás Lichtmaier
 +   This file is part of LibGTop 1.0.
 +
-+   Modified by Nicol�s Lichtmaier to give a process open files.
++   Modified by Nicolás Lichtmaier to give a process open files.
 +
 +   Contributed by Martin Baulig <martin@home-of-linux.org>, April 1998.
 +
@@ -1969,6 +1910,13 @@
 +#include <glibtop.h>
 +#include <glibtop/error.h>
 +#include <glibtop/procopenfiles.h>
++#include <sys/types.h>
++#include <dirent.h>
++#include <string.h>
++#include <stdio.h>
++#include <arpa/inet.h>
++
++#include "glibtop_private.h"
 +
 +static const unsigned long _glibtop_sysdeps_proc_open_files =
 +(1L << GLIBTOP_PROC_OPEN_FILES_NUMBER)|
@@ -1984,17 +1932,287 @@
 +}
 +
 +
-+/* XXX Unimplemented on Cygwin */
++
++typedef void (*LineParser)(GHashTable *dict, const char *line);
++
++
++static void
++parse_file(const char *filename, LineParser parser, GHashTable *dict)
++{
++	FILE *f;
++	char *line = NULL;
++	size_t size = 0;
++
++	f = fopen(filename, "r");
++
++	if(!f) {
++		g_warning("Cannot open '%s'", filename);
++		return;
++	}
++
++
++	/* skip the first line */
++	if (getline(&line, &size, f) == -1)
++		goto eof;
++
++	while (getline(&line, &size, f) != -1)
++		parser(dict, line);
++
++ eof:
++	free(line);
++	fclose(f);
++}
++
++
++static GHashTable*
++get_all(const char *filename, LineParser parser)
++{
++	GHashTable *dict;
++
++	dict = g_hash_table_new_full(g_direct_hash, g_direct_equal,
++				     NULL, g_free);
++
++	parse_file(filename, parser, dict);
++
++	return dict;
++}
++
++
++
++
++
++struct Inet6SocketEntry
++{
++	char host[GLIBTOP_OPEN_DEST_HOST_LEN + 1];
++	int port;
++};
++
++
++#ifdef AF_INET6
++static void
++inet6_socket_parser(GHashTable *dict, const char* line)
++{
++	struct Inet6SocketEntry *se;
++	int sock;
++	struct in6_addr addr;
++
++	se = g_malloc0(sizeof *se);
++
++	if(sscanf(line, "%*d: %*s %8x%8x%8x%8x:%4x %*x %*x:%*x %*x:%*x %*d %*d %*d %d",
++		  &addr.s6_addr32[0], &addr.s6_addr32[1], &addr.s6_addr32[2],
++		  &addr.s6_addr32[3], &se->port, &sock) != 6)
++		goto error;
++
++	if(!inet_ntop(AF_INET6, &addr, se->host, sizeof se->host))
++		goto error;
++
++	g_hash_table_insert(dict, GINT_TO_POINTER(sock), se);
++	return;
++
++ error:
++	g_free(se);
++}
++
++
++static inline GHashTable *
++get_all_inet6_sockets()
++{
++	return get_all("/proc/net/tcp6", inet6_socket_parser);
++}
++#endif
++
++
++
++
++
++struct InetSocketEntry
++{
++	char host[GLIBTOP_OPEN_DEST_HOST_LEN + 1];
++	int port;
++};
++
++
++static void
++inet_socket_parser(GHashTable *dict, const char* line)
++{
++	struct InetSocketEntry *se;
++	int sock;
++	unsigned addr;
++
++	se = g_malloc0(sizeof *se);
++
++	if(sscanf(line, "%*d: %*x:%*x %8x:%4x %*x %*x:%*x %*x:%*x %*d %*d %*d %d",
++		  &addr, &se->port, &sock) != 3)
++		goto error;
++
++	if(!inet_ntop(AF_INET, &addr, se->host, sizeof se->host))
++		goto error;
++
++	g_hash_table_insert(dict, GINT_TO_POINTER(sock), se);
++	return;
++
++ error:
++	g_free(se);
++}
++
++
++static inline GHashTable *
++get_all_inet_sockets()
++{
++	return get_all("/proc/net/tcp", inet_socket_parser);
++}
++
++
++
++
++
++struct LocalSocketEntry
++{
++	char name[GLIBTOP_OPEN_DEST_HOST_LEN + 1];
++};
++
++
++static void
++local_socket_parser(GHashTable *dict, const char *line)
++{
++	int sock;
++	struct LocalSocketEntry *use;
++	char *p;
++
++	use = g_malloc0(sizeof *use);
++
++	/* dfaf1640: 00000003 00000000 00000000 0001 03  6457 /dev/log */
++	p = skip_multiple_token(line, 6);
++
++	sock = strtoul(p, &p, 10);
++	g_strlcpy(use->name, p, sizeof use->name);
++	g_strstrip(use->name);
++	g_hash_table_insert(dict, GINT_TO_POINTER(sock), use);
++}
++
++
++static inline GHashTable *
++get_all_local_sockets()
++{
++	return get_all("/proc/net/unix", local_socket_parser);
++}
++
++
++
++/* Provides detailed information about a process' open files */
++
 +glibtop_open_files_entry *
 +glibtop_get_proc_open_files_s (glibtop *server, glibtop_proc_open_files *buf,	pid_t pid)
 +{
-+	return NULL;
-+}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/procsegment.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/procsegment.c	2008-12-15 14:31:56.337625000 -0600
-@@ -0,0 +1,97 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
++	char fn [BUFSIZ];
++	GArray *entries;
++	GHashTable *inet6_sockets = NULL, *inet_sockets = NULL, *local_sockets = NULL;
++	struct dirent *direntry;
++	DIR *dir;
 +
++	memset (buf, 0, sizeof (glibtop_proc_open_files));
++
++	sprintf (fn, "/proc/%d/fd", pid);
++
++	dir = opendir (fn);
++	if (!dir) return NULL;
++
++	entries = g_array_new(FALSE, FALSE, sizeof(glibtop_open_files_entry));
++
++	while((direntry = readdir(dir))) {
++		char tgt [BUFSIZ];
++		glibtop_open_files_entry entry = {0};
++
++		if(direntry->d_name[0] == '.')
++			continue;
++
++		g_snprintf(fn, sizeof fn, "/proc/%d/fd/%s",
++			   pid, direntry->d_name);
++
++		if (!safe_readlink(fn, tgt, sizeof tgt))
++			continue;
++
++		entry.fd = atoi(direntry->d_name);
++
++		if(g_str_has_prefix(tgt, "socket:["))
++		{
++			int sockfd;
++			struct Inet6SocketEntry *i6se;
++			struct InetSocketEntry *ise;
++			struct LocalSocketEntry *lse;
++
++#ifdef AF_INET6
++			if(!inet6_sockets) inet6_sockets = get_all_inet6_sockets();
++#endif
++			if(!inet_sockets) inet_sockets = get_all_inet_sockets();
++			if(!local_sockets) local_sockets = get_all_local_sockets();
++
++			sockfd = atoi(tgt + 8);
++
++			i6se = g_hash_table_lookup(inet6_sockets,
++						 GINT_TO_POINTER(sockfd));
++
++			if(i6se) {
++				entry.type = GLIBTOP_FILE_TYPE_INET6SOCKET;
++				entry.info.sock.dest_port = i6se->port;
++				g_strlcpy(entry.info.sock.dest_host, i6se->host,
++					  sizeof entry.info.sock.dest_host);
++				goto found;
++			}
++
++			ise = g_hash_table_lookup(inet_sockets,
++						 GINT_TO_POINTER(sockfd));
++
++			if(ise) {
++				entry.type = GLIBTOP_FILE_TYPE_INETSOCKET;
++				entry.info.sock.dest_port = ise->port;
++				g_strlcpy(entry.info.sock.dest_host, ise->host,
++					  sizeof entry.info.sock.dest_host);
++				goto found;
++			}
++
++			lse = g_hash_table_lookup(local_sockets,
++						  GINT_TO_POINTER(sockfd));
++
++			if(lse) {
++				entry.type = GLIBTOP_FILE_TYPE_LOCALSOCKET;
++				g_strlcpy(entry.info.localsock.name, lse->name,
++					  sizeof entry.info.localsock.name);
++				goto found;
++			}
++
++		found:
++			(void)0; /* kills warning */
++		}
++		else if(g_str_has_prefix(tgt, "pipe:["))
++		{
++			entry.type = GLIBTOP_FILE_TYPE_PIPE;
++		}
++		else
++		{
++			entry.type = GLIBTOP_FILE_TYPE_FILE;
++			g_strlcpy(entry.info.file.name, tgt, sizeof entry.info.file.name);
++		}
++
++		g_array_append_val(entries, entry);
++	}
++
++	closedir (dir);
++
++	if(inet_sockets) g_hash_table_destroy(inet_sockets);
++	if(inet6_sockets) g_hash_table_destroy(inet6_sockets);
++	if(local_sockets) g_hash_table_destroy(local_sockets);
++
++	buf->flags = _glibtop_sysdeps_proc_open_files;
++	buf->number = entries->len;
++	buf->size = sizeof(glibtop_open_files_entry);
++	buf->total = buf->number * buf->size;
++
++	return (glibtop_open_files_entry*)g_array_free(entries, FALSE);
++}
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/procsegment.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/procsegment.c	2009-02-16 01:19:39.296875000 -0600
+@@ -0,0 +1,88 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -2029,8 +2247,6 @@
 +
 +static const unsigned long _glibtop_sysdeps_proc_segment_statm =
 +(1L << GLIBTOP_PROC_SEGMENT_TEXT_RSS) +
-+/* Disabled due to bug in the Linux Kernel. */
-+/* (1L << GLIBTOP_PROC_SEGMENT_SHLIB_RSS) + */
 +(1L << GLIBTOP_PROC_SEGMENT_DATA_RSS) +
 +(1L << GLIBTOP_PROC_SEGMENT_DIRTY_SIZE);
 +
@@ -2052,11 +2268,9 @@
 +	char buffer [BUFSIZ], *p;
 +	const size_t pagesize = get_page_size();
 +
-+	glibtop_init_s (&server, GLIBTOP_SYSDEPS_PROC_SEGMENT, 0);
-+
 +	memset (buf, 0, sizeof (glibtop_proc_segment));
 +
-+	if (proc_stat_to_buffer (buffer, pid))
++	if (proc_stat_to_buffer(buffer, sizeof buffer, pid))
 +		return;
 +
 +	p = proc_stat_after_cmd (buffer);
@@ -2070,13 +2284,10 @@
 +
 +	buf->flags = _glibtop_sysdeps_proc_segment;
 +
-+	if (proc_statm_to_buffer (buffer, pid))
++	if (proc_statm_to_buffer(buffer, sizeof buffer, pid))
 +		return;
 +
 +	p = skip_multiple_token (buffer, 3);
-+
-+	/* This doesn't work very well due to a bug in the Linux kernel.
-+	 * I'll submit a patch to the kernel mailing list soon. */
 +
 +	buf->text_rss   = strtoull (p, &p, 0);
 +	buf->shlib_rss  = strtoull (p, &p, 0);
@@ -2090,11 +2301,9 @@
 +
 +	buf->flags |= _glibtop_sysdeps_proc_segment_statm;
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/procsignal.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/procsignal.c	2008-12-15 14:32:01.790750000 -0600
-@@ -0,0 +1,68 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/procsignal.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/procsignal.c	2009-02-16 00:35:36.968750000 -0600
+@@ -0,0 +1,64 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -2142,11 +2351,9 @@
 +{
 +	char buffer [BUFSIZ], *p;
 +
-+	glibtop_init_s (&server, GLIBTOP_SYSDEPS_PROC_SIGNAL, 0);
-+
 +	memset (buf, 0, sizeof (glibtop_proc_signal));
 +
-+	if (proc_stat_to_buffer (buffer, pid))
++	if (proc_stat_to_buffer(buffer, sizeof buffer, pid))
 +		return;
 +
 +	p = proc_stat_after_cmd (buffer);
@@ -2161,11 +2368,9 @@
 +
 +	buf->flags = _glibtop_sysdeps_proc_signal;
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/procstate.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/procstate.c	2008-12-15 14:32:07.478250000 -0600
-@@ -0,0 +1,124 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/procstate.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/procstate.c	2009-02-16 00:35:36.968750000 -0600
+@@ -0,0 +1,120 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -2219,8 +2424,6 @@
 +	char buffer [BUFSIZ], *p;
 +	struct stat statb;
 +
-+	glibtop_init_s (&server, GLIBTOP_SYSDEPS_PROC_STATE, 0);
-+
 +	memset (buf, 0, sizeof (glibtop_proc_state));
 +
 +	/* IMPORTANT NOTICE: For security reasons it is extremely important
@@ -2243,7 +2446,7 @@
 +
 +	/* Now we read the remaining fields. */
 +
-+	if (proc_stat_to_buffer (buffer, pid))
++	if (proc_stat_to_buffer(buffer, sizeof buffer, pid))
 +		return;
 +
 +	p = proc_stat_after_cmd(buffer);
@@ -2288,11 +2491,9 @@
 +
 +	buf->flags |= _glibtop_sysdeps_proc_state;
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/proctime.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/proctime.c	2008-12-15 14:32:12.650125000 -0600
-@@ -0,0 +1,136 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/proctime.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/proctime.c	2009-02-16 01:21:05.187500000 -0600
+@@ -0,0 +1,109 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -2351,11 +2552,9 @@
 +	char buffer [BUFSIZ], *p;
 +	int i;
 +
-+	glibtop_init_s (&server, GLIBTOP_SYSDEPS_PROC_TIME, 0);
-+
 +	memset (buf, 0, sizeof (glibtop_proc_time));
 +
-+	if (proc_stat_to_buffer (buffer, pid))
++	if (proc_stat_to_buffer(buffer, sizeof buffer, pid))
 +		return;
 +
 +	p = proc_stat_after_cmd (buffer);
@@ -2373,32 +2572,10 @@
 +
 +	p = skip_multiple_token (p, 3);
 +
-+	/* timeout is 0 on 2.4 and "thread_number" on 2.6
-+	   lets skip it (using previous skip_multiple_token)
-+	   buf->timeout       = strtoull (p, &p, 0);
-+	*/
 +	buf->it_real_value = strtoull (p, &p, 0);
 +
 +	/* seconds since epoch */
 +	{
-+	  /*
-+	     See libgtop documentation.
-+
-+	     #ifdef __KERNEL__
-+	     ...
-+	     *
-+	     * Have the 32 bit jiffies value wrap 5 minutes after boot
-+	     * so jiffies wrap bugs show up earlier.
-+	     *
-+	     #define INITIAL_JIFFIES ((unsigned long)(unsigned int) (-300*HZ))
-+	     ...
-+	     #endif
-+
-+	     start_time may be incremented by INITIAL_JIFFIES, so start_time
-+	     may be not be exact. You may also get wrong start_time if your
-+	     system clock is not synchronised with you hardware clock.
-+	     'man hwclock'
-+	  */
 +	  buf->start_time = get_boot_time(server) + strtoull (p, &p, 0) / 100;
 +	}
 +
@@ -2409,8 +2586,7 @@
 +	if (!server->ncpu)
 +		return;
 +
-+	/* FIXME: doesn't work with 2.6 */
-+	if (proc_file_to_buffer (buffer, "/proc/%d/cpu", pid))
++	if (proc_file_to_buffer(buffer, sizeof buffer, "/proc/%d/cpu", pid))
 +		return;
 +
 +	p = skip_multiple_token (p, 3);
@@ -2427,11 +2603,9 @@
 +
 +	buf->flags |= _glibtop_sysdeps_proc_time_smp;
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/procuid.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/procuid.c	2008-12-15 14:32:18.009500000 -0600
-@@ -0,0 +1,119 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/procuid.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/procuid.c	2009-02-16 01:26:36.625000000 -0600
+@@ -0,0 +1,115 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -2487,11 +2661,9 @@
 +{
 +	char buffer [BUFSIZ], *p;
 +
-+	glibtop_init_s (&server, GLIBTOP_SYSDEPS_PROC_UID, 0);
-+
 +	memset (buf, 0, sizeof (glibtop_proc_uid));
 +
-+	if (proc_status_to_buffer (buffer, pid))
++	if (proc_status_to_buffer(buffer, sizeof buffer, pid))
 +		return;
 +
 +	/* Search substring 'Pid:' */
@@ -2525,7 +2697,7 @@
 +
 +	buf->flags = _glibtop_sysdeps_proc_uid;
 +
-+	if (proc_stat_to_buffer (buffer, pid))
++	if (proc_stat_to_buffer(buffer, sizeof buffer, pid))
 +		return;
 +
 +	p = proc_stat_after_cmd (buffer);
@@ -2549,9 +2721,9 @@
 +
 +	buf->flags |= _glibtop_sysdeps_proc_uid_stat;
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/procwd.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/procwd.c	2008-12-15 14:59:20.806375000 -0600
-@@ -0,0 +1,84 @@
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/procwd.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/procwd.c	2009-02-16 00:35:36.984375000 -0600
+@@ -0,0 +1,99 @@
 +/* Copyright (C) 2007 Benoît Dejean
 +   This file is part of LibGTop 2.
 +
@@ -2611,6 +2783,7 @@
 +	GPtrArray *dirs;
 +	char path[80];
 +	char dir[256];
++	DIR *task;
 +
 +	memset(buf, 0, sizeof(glibtop_proc_wd));
 +
@@ -2628,6 +2801,20 @@
 +	if (safe_readlink(path, dir, sizeof dir))
 +		g_ptr_array_add(dirs, g_strdup(dir));
 +
++	g_snprintf(path, sizeof path, "/proc/%u/task", pid);
++	if ((task = opendir(path)) != NULL) {
++		struct dirent *sub;
++		while ((sub = readdir(task)) != NULL) {
++			/* task dirs have numeric name */
++			if (!isdigit(sub->d_name[0]))
++				continue;
++			g_snprintf(path, sizeof path, "/proc/%u/task/%s/cwd", pid, sub->d_name);
++			if (safe_readlink(path, dir, sizeof dir) && !is_in(dirs, dir))
++				g_ptr_array_add(dirs, g_strdup(dir));
++		}
++		closedir(task);
++	}
++
 +	buf->number = dirs->len;
 +	buf->flags |= (1 << GLIBTOP_PROC_WD_NUMBER);
 +
@@ -2636,11 +2823,9 @@
 +	return (char**) g_ptr_array_free(dirs, FALSE);
 +}
 +
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/sem_limits.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/sem_limits.c	2008-12-15 14:50:53.868875000 -0600
-@@ -0,0 +1,88 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/sem_limits.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/sem_limits.c	2009-02-16 01:36:49.593750000 -0600
+@@ -0,0 +1,84 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -2707,8 +2892,6 @@
 +	struct seminfo	seminfo;
 +	union semun	arg;
 +
-+	glibtop_init_s (&server, GLIBTOP_SYSDEPS_SEM_LIMITS, 0);
-+
 +	memset (buf, 0, sizeof (glibtop_sem_limits));
 +
 +	buf->flags = _glibtop_sysdeps_sem_limits;
@@ -2727,11 +2910,9 @@
 +	buf->semvmx = seminfo.semvmx;
 +	buf->semaem = seminfo.semaem;
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/shm_limits.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/shm_limits.c	2008-12-15 14:50:59.618875000 -0600
-@@ -0,0 +1,63 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/shm_limits.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/shm_limits.c	2009-02-16 01:33:46.093750000 -0600
+@@ -0,0 +1,59 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -2780,8 +2961,6 @@
 +{
 +	struct shminfo shminfo;
 +
-+	glibtop_init_s (&server, GLIBTOP_SYSDEPS_SHM_LIMITS, 0);
-+
 +	memset (buf, 0, sizeof (glibtop_shm_limits));
 +
 +	shmctl (0, IPC_INFO, (void *) &shminfo);
@@ -2793,11 +2972,9 @@
 +	buf->shmall = shminfo.shmall;
 +	buf->flags = _glibtop_sysdeps_shm_limits;
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/siglist.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/siglist.c	2008-12-15 13:55:50.962625000 -0600
-@@ -0,0 +1,145 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/siglist.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/siglist.c	2009-02-16 00:35:37.000000000 -0600
+@@ -0,0 +1,143 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -2941,11 +3118,9 @@
 +#endif
 +	{0,		NULL,		NULL}
 +};
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/swap.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/swap.c	2008-12-15 14:51:11.181375000 -0600
-@@ -0,0 +1,83 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/swap.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/swap.c	2009-02-16 01:24:45.359375000 -0600
+@@ -0,0 +1,81 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -3001,11 +3176,9 @@
 +{
 +	char buffer [BUFSIZ], *p;
 +
-+	glibtop_init_s (&server, GLIBTOP_SYSDEPS_SWAP, 0);
-+
 +	memset (buf, 0, sizeof (glibtop_swap));
 +
-+	file_to_buffer(server, buffer, MEMINFO);
++	file_to_buffer(server, buffer, sizeof buffer, MEMINFO);
 +
 +	buf->total = get_scaled(buffer, "SwapTotal:");
 +	buf->free = get_scaled(buffer, "SwapFree:");
@@ -3013,25 +3186,25 @@
 +
 +	buf->flags = _glibtop_sysdeps_swap;
 +
-+	file_to_buffer (server, buffer, PROC_STAT);
-+
-+	p = strstr (buffer, "\nswap");
-+
-+	if(p)
 +	{
-+		p = skip_token (p);
++		file_to_buffer (server, buffer, sizeof buffer, PROC_STAT);
 +
-+		buf->pagein  = strtoull (p, &p, 0);
-+		buf->pageout = strtoull (p, &p, 0);
++		p = strstr (buffer, "\nswap");
 +
-+		buf->flags |= _glibtop_sysdeps_swap_paging;
++		if(p)
++		{
++			p = skip_token (p);
++
++			buf->pagein  = strtoull (p, &p, 0);
++			buf->pageout = strtoull (p, &p, 0);
++
++			buf->flags |= _glibtop_sysdeps_swap_paging;
++		}
 +	}
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/sysinfo.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/sysinfo.c	2008-12-15 13:55:50.978250000 -0600
-@@ -0,0 +1,103 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/sysinfo.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/sysinfo.c	2009-02-16 00:35:37.000000000 -0600
+@@ -0,0 +1,99 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -3070,14 +3243,12 @@
 +static void
 +init_sysinfo (glibtop *server)
 +{
-+	char buffer [BUFSIZ];
++	char buffer [16384];
 +	gchar ** processors;
 +
 +	if(G_LIKELY(sysinfo.flags)) return;
 +
-+	glibtop_init_s (&server, GLIBTOP_SYSDEPS_CPU, 0);
-+
-+	file_to_buffer(server, buffer, FILENAME);
++	file_to_buffer(server, buffer, sizeof buffer, FILENAME);
 +
 +	/* cpuinfo records are seperated by a blank line */
 +	processors = g_strsplit(buffer, "\n\n", 0);
@@ -3133,11 +3304,9 @@
 +	init_sysinfo (server);
 +	return &sysinfo;
 +}
---- origsrc/libgtop-2.24.0/sysdeps/cygwin/uptime.c	1969-12-31 18:00:00.000000000 -0600
-+++ src/libgtop-2.24.0/sysdeps/cygwin/uptime.c	2008-12-15 14:51:33.009500000 -0600
-@@ -0,0 +1,65 @@
-+/* $Id: libgtop2-2.14.7-1.src.patch,v 1.1 2007-02-18 05:09:28 yselkowitz Exp $ */
-+
+--- origsrc/libgtop-2.24.4/sysdeps/cygwin/uptime.c	1969-12-31 18:00:00.000000000 -0600
++++ src/libgtop-2.24.4/sysdeps/cygwin/uptime.c	2009-02-16 00:35:37.015625000 -0600
+@@ -0,0 +1,61 @@
 +/* Copyright (C) 1998-99 Martin Baulig
 +   This file is part of LibGTop 1.0.
 +
@@ -3189,11 +3358,9 @@
 +{
 +	char buffer [BUFSIZ], *p;
 +
-+	glibtop_init_s (&server, GLIBTOP_SYSDEPS_UPTIME, 0);
-+
 +	memset (buf, 0, sizeof (glibtop_uptime));
 +
-+	file_to_buffer(server, buffer, FILENAME);
++	file_to_buffer(server, buffer, sizeof buffer, FILENAME);
 +
 +	buf->uptime   = g_ascii_strtod (buffer, &p);
 +	buf->idletime = g_ascii_strtod (p, &p);
