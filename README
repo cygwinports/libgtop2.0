@@ -8,24 +8,25 @@ there are bugs in the sysdeps backend, in addition to a
 number of features which are not available on all platforms.
 
 Runtime requirements:
-  cygwin-1.5.25-15
-  libglib2.0_0-2.18.4-1
-  libintl8-0.17-2
-  libXau6-1.0.4-1
+  cygwin-1.7.0-45
+  libgcc1-4.3.2-2
+  libglib2.0_0-2.20.0-1
+  libintl8-0.17-10
+  libXau6-1.0.4-10
 
 Build requirements:
 (besides corresponding -devel packages)
-  autoconf2.5-2.63-1
-  automake1.10-1.10.1-2
+  autoconf2.5-2.63-10
+  automake1.10-1.10.1-10
   binutils-20080624-2
-  cygport-0.4.3-1
-  gawk-3.1.6-1
-  gcc-core-3.4.4-3
-  gtk-doc-1.11-1
-  gnome-common-2.24.0-1
-  intltool-0.40.5-1
-  libtool-2.2.6a-1
-  make-3.81-1
+  cygport-0.9.6-1
+  gawk-3.1.6-2
+  gcc4-core-4.3.2-2
+  gtk-doc-1.11-2
+  gnome-common-2.26.0-1
+  intltool-0.40.6-1
+  libtool-2.2.7a-12
+  make-3.81-2
   pkg-config-0.23a-2
   sed-4.1.5-2
 
@@ -38,16 +39,16 @@ Canonical download:
 -------------------------------------------
 
 Build instructions:
-  unpack libgtop2.0-2.24.4-X-src.tar.bz2
+  unpack libgtop2.0-2.26.1-X-src.tar.bz2
     if you use setup to install this src package, it will be
 	 unpacked under /usr/src automatically
   cd /usr/src
-  cygport ./libgtop2.0-2.24.4-X.cygport all
+  cygport ./libgtop2.0-2.26.1-X.cygport all
 
 This will create:
-  /usr/src/libgtop2.0-2.24.4-X-src.tar.bz2
-  /usr/src/libgtop2.0-devel-2.24.4-X.tar.bz2
-  /usr/src/libgtop2.0_7-2.24.4-X.tar.bz2
+  /usr/src/libgtop2.0-2.26.1-X-src.tar.bz2
+  /usr/src/libgtop2.0-devel-2.26.1-X.tar.bz2
+  /usr/src/libgtop2.0_7-2.26.1-X.tar.bz2
 
 -------------------------------------------
 
@@ -55,15 +56,14 @@ Files included in the binary packages:
 
 (libgtop2.0_7)
   /usr/bin/cyggtop-2.0-7.dll
-  /usr/share/doc/libgtop2.0-2.24.4/AUTHORS
-  /usr/share/doc/libgtop2.0-2.24.4/COPYING
-  /usr/share/doc/libgtop2.0-2.24.4/COPYRIGHT.txt
-  /usr/share/doc/libgtop2.0-2.24.4/ChangeLog
-  /usr/share/doc/libgtop2.0-2.24.4/INSTALL
-  /usr/share/doc/libgtop2.0-2.24.4/NEWS
-  /usr/share/doc/libgtop2.0-2.24.4/README
+  /usr/share/doc/libgtop2.0/AUTHORS
+  /usr/share/doc/libgtop2.0/COPYING
+  /usr/share/doc/libgtop2.0/ChangeLog
+  /usr/share/doc/libgtop2.0/NEWS
+  /usr/share/doc/libgtop2.0/README
   /usr/share/locale/am/LC_MESSAGES/libgtop-2.0.mo
   /usr/share/locale/ar/LC_MESSAGES/libgtop-2.0.mo
+  /usr/share/locale/as/LC_MESSAGES/libgtop-2.0.mo
   /usr/share/locale/az/LC_MESSAGES/libgtop-2.0.mo
   /usr/share/locale/be/LC_MESSAGES/libgtop-2.0.mo
   /usr/share/locale/bg/LC_MESSAGES/libgtop-2.0.mo
@@ -97,9 +97,11 @@ Files included in the binary packages:
   /usr/share/locale/it/LC_MESSAGES/libgtop-2.0.mo
   /usr/share/locale/ja/LC_MESSAGES/libgtop-2.0.mo
   /usr/share/locale/ka/LC_MESSAGES/libgtop-2.0.mo
+  /usr/share/locale/kn/LC_MESSAGES/libgtop-2.0.mo
   /usr/share/locale/ko/LC_MESSAGES/libgtop-2.0.mo
   /usr/share/locale/ku/LC_MESSAGES/libgtop-2.0.mo
   /usr/share/locale/ky/LC_MESSAGES/libgtop-2.0.mo
+  /usr/share/locale/la/LC_MESSAGES/libgtop-2.0.mo
   /usr/share/locale/lt/LC_MESSAGES/libgtop-2.0.mo
   /usr/share/locale/lv/LC_MESSAGES/libgtop-2.0.mo
   /usr/share/locale/mg/LC_MESSAGES/libgtop-2.0.mo
@@ -237,17 +239,8 @@ Files included in the binary packages:
 
 Port Notes:
 
------ version 2.24.4-1 -----
-Version bump.
-
------ version 2.24.0-1 -----
-Version bump for GNOME 2.24.
-
------ version 2.14.7-1 -----
-Version bump.
-
------ version 2.14.5-1 -----
-Initial release for Cygwin.
+----- version 2.26.1-1 -----
+Initial release of GNOME 2.26 for Cygwin 1.7.
 
 
 Cygwin port maintained by:
