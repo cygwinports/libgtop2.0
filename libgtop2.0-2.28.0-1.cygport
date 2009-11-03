@@ -1,10 +1,7 @@
 ORIG_PN="libgtop"
 inherit gnome2
 
-PATCH_URI="
-	2.26.1-sysdeps-cygwin.patch
-	2.24.0-no-undefined.patch
-"
+PATCH_URI="2.28-cygwin-mountlist.patch"
 
 PKG_NAMES="${PN} ${PN}_7 ${PN}-devel"
 libgtop2_0_7_CONTENTS="usr/bin/*-2.0-7.dll usr/share/doc/ usr/share/locale/"
