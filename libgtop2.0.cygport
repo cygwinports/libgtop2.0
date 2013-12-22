@@ -2,9 +2,9 @@ ORIG_PN="libgtop"
 inherit gnome2
 
 NAME="libgtop2.0"
-VERSION=2.28.4
+VERSION=2.28.5
 RELEASE=1
-CATEGORY="GNOME"
+CATEGORY="Libs"
 SUMMARY="GNOME system monitoring library"
 DESCRIPTION="GNOME cross-platform system monitoring library
 
