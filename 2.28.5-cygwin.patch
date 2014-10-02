@@ -1,0 +1,48 @@
+--- origsrc/libgtop-2.28.5/sysdeps/cygwin/proclist.c	2013-07-27 07:40:23.000000000 -0500
++++ src/libgtop-2.28.5/sysdeps/cygwin/proclist.c	2014-10-02 17:11:53.605355300 -0500
+@@ -80,8 +80,11 @@ glibtop_get_proclist_s (glibtop *server,
+ 	while((entry = readdir (proc))) {
+ 		pid_t pid;
+ 
++#if 0
++		/* FIXME: d_type not set */
+ 		if (entry->d_type != DT_DIR)
+ 			continue;
++#endif
+ 
+ 		if (!(pid = strtoul(entry->d_name, NULL, 10)))
+ 			continue;
+--- origsrc/libgtop-2.28.5/sysdeps/cygwin/procmap.c	2013-07-27 07:40:23.000000000 -0500
++++ src/libgtop-2.28.5/sysdeps/cygwin/procmap.c	2014-10-02 15:21:48.305088700 -0500
+@@ -35,7 +35,7 @@
+ #define  MAPS_FILE "/proc/%u/maps"
+ 
+ 
+-#define PROC_MAPS_FORMAT "%16" G_GINT64_MODIFIER "x-%16" G_GINT64_MODIFIER "x %4c %16" G_GINT64_MODIFIER "x %02hx:%02hx %" G_GINT64_MODIFIER "u%*[ ]%n"
++#define PROC_MAPS_FORMAT "%16" G_GINT64_MODIFIER "X-%16" G_GINT64_MODIFIER "X %4c %16" G_GINT64_MODIFIER "X %04hX:%04hX %" G_GINT64_MODIFIER "u%*[ ]%n"
+ 
+ 
+ static const unsigned long _glibtop_sysdeps_proc_map =
+--- origsrc/libgtop-2.28.5/sysdeps/cygwin/procmem.c	2013-07-27 07:40:23.000000000 -0500
++++ src/libgtop-2.28.5/sysdeps/cygwin/procmem.c	2014-10-02 17:10:52.199057700 -0500
+@@ -44,7 +44,8 @@ void
+ glibtop_get_proc_mem_s (glibtop *server, glibtop_proc_mem *buf, pid_t pid)
+ {
+ 	char buffer [BUFSIZ], *p;
+-	const size_t pagesize = get_page_size();
++	/* https://cygwin.com/ml/cygwin/2006-07/msg00716.html */
++	const size_t pagesize = /*get_page_size()*/ 4096;
+ 
+ 	memset (buf, 0, sizeof (glibtop_proc_mem));
+ 
+--- origsrc/libgtop-2.28.5/sysdeps/cygwin/procsegment.c	2013-07-27 07:40:23.000000000 -0500
++++ src/libgtop-2.28.5/sysdeps/cygwin/procsegment.c	2014-10-02 17:21:09.264915100 -0500
+@@ -51,7 +51,7 @@ glibtop_get_proc_segment_s (glibtop *ser
+ 			    pid_t pid)
+ {
+ 	char buffer [BUFSIZ], *p;
+-	const size_t pagesize = get_page_size();
++	const size_t pagesize = /*get_page_size()*/ 4096;
+ 
+ 	memset (buf, 0, sizeof (glibtop_proc_segment));
+ 
