@@ -2,8 +2,8 @@ ORIG_PN="libgtop"
 inherit gnome2
 
 NAME="libgtop2.0"
-VERSION=2.28.5
-RELEASE=2
+VERSION=2.30.0
+RELEASE=1
 CATEGORY="Libs"
 SUMMARY="GNOME system monitoring library"
 DESCRIPTION="GNOME cross-platform system monitoring library
@@ -13,8 +13,8 @@ not available on all platforms."
 
 PATCH_URI="2.28.5-cygwin.patch"
 
-PKG_NAMES="${NAME}_7 ${NAME}-devel ${NAME}-doc girepository-GTop2.0"
-libgtop2_0_7_CONTENTS="usr/bin/*-2.0-7.dll usr/share/doc/ usr/share/locale/"
+PKG_NAMES="${NAME}_10 ${NAME}-devel ${NAME}-doc girepository-GTop2.0"
+libgtop2_0_10_CONTENTS="usr/bin/*-2.0-10.dll usr/share/doc/ usr/share/locale/"
 libgtop2_0_devel_CONTENTS="usr/include/ usr/lib/lib* usr/lib/pkgconfig"
 libgtop2_0_doc_CATEGORY="Doc"
 libgtop2_0_doc_CONTENTS="usr/share/gtk-doc/ usr/share/info/"
